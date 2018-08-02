@@ -1,0 +1,17 @@
+version: '1'
+settings:
+  chinese:
+    convert:
+      mode: t2s
+      from: zh-TW
+      to: zh-CN
+fragments:
+  admin:
+    description: translations for admin page
+    translations:
+      admin:
+        zh-TW: 管理員
+        en-US: Admin
+output:
+- type: js
+  
