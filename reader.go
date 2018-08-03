@@ -28,6 +28,10 @@ func (t Translation) GetLocales() []string {
 	return locales
 }
 
+func (t *Translation) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return unmarshal(&t.data)
+}
+
 // Translations presents translationKey => translation (for different language) mapping
 type Translations = map[string]Translation
 

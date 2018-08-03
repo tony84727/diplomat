@@ -9,29 +9,30 @@ import (
 )
 
 type Diplomat struct {
-	outline Outline
+	outline    Outline
+	outputPath string
+	messengers map[string]Messenger
 }
 
-func NewDiplomatForFile(path string) (*Diplomat, error) {
-	data, err := ioutil.ReadFile(path)
+func (d *Diplomat) applyChineseConvertor(mode, from, to string) error {
+	convertor, err := NewChineseConvertor(mode, from, to)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	var outline Outline
-	err = yaml.Unmarshal(data, &outline)
-	if err != nil {
-		return nil, err
+	for _, f := range d.outline.Fragments {
+		for _, t := range f.Translations {
+			convertor.Apply(t)
+		}
 	}
-	dip := NewDiplomat(outline)
-	return &dip, nil
+	return nil
 }
 
-func NewDiplomat(outline Outline) Diplomat {
-	d := Diplomat{
-		outline,
-	}
-	d.applyTransformers()
-	return d
+func (d Diplomat) GetOutline() Outline {
+	return d.outline
+}
+
+func (d Diplomat) Output() error {
+	return nil
 }
 
 func (d Diplomat) applyTransformers() {
@@ -42,6 +43,34 @@ func (d Diplomat) applyTransformers() {
 			d.outline.Settings.Chinese.Convert.To,
 		)
 	}
+}
+
+func (d *Diplomat) RegisterMessenger(name string, messenger Messenger) {
+	d.messengers[name] = messenger
+}
+
+func NewDiplomatForFile(path string, outputPath string) (*Diplomat, error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var outline Outline
+	err = yaml.Unmarshal(data, &outline)
+	if err != nil {
+		return nil, err
+	}
+	dip := NewDiplomat(outline, outputPath)
+	return &dip, nil
+}
+
+func NewDiplomat(outline Outline, outputPath string) Diplomat {
+	d := Diplomat{
+		outline:    outline,
+		outputPath: outputPath,
+		messengers: make(map[string]Messenger, 1),
+	}
+	d.applyTransformers()
+	return d
 }
 
 type ChineseConvertor struct {
@@ -80,21 +109,4 @@ func (cc ChineseConvertor) appliable(t Translation) bool {
 	_, fromExist := t.Get(cc.From)
 	_, toExist := t.Get(cc.To)
 	return fromExist && !toExist
-}
-
-func (d *Diplomat) applyChineseConvertor(mode, from, to string) error {
-	convertor, err := NewChineseConvertor(mode, from, to)
-	if err != nil {
-		return err
-	}
-	for _, f := range d.outline.Fragments {
-		for _, t := range f.Translations {
-			convertor.Apply(t)
-		}
-	}
-	return nil
-}
-
-func (d Diplomat) GetOutline() Outline {
-	return d.outline
 }

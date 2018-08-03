@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
 	"fmt"
+	"log"
 	"os"
-	"github.com/MinecraftXwinP/diplomat"
 
+	"github.com/MinecraftXwinP/diplomat"
 )
 
 func printUsage() {
@@ -21,7 +21,7 @@ func getTranslationFile() string {
 }
 
 func main() {
-	d, err := diplomat.NewDiplomatForFile(getTranslationFile())
+	d, err := diplomat.NewDiplomatForFile(getTranslationFile(), "out")
 	if err != nil {
 		log.Fatal(err)
 	}
