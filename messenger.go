@@ -21,6 +21,39 @@ type MessengerConfig interface {
 	GetFragmentName() string
 }
 
+type BasicMessengerConfig struct {
+	messengerType string
+	name          string
+	pairs         []TranslationPair
+	path          string
+	locale        string
+	fragmentName  string
+}
+
+func (c BasicMessengerConfig) GetType() string {
+	return c.messengerType
+}
+
+func (c BasicMessengerConfig) GetName() string {
+	return c.name
+}
+
+func (c BasicMessengerConfig) GetPairs() []TranslationPair {
+	return c.pairs
+}
+
+func (c BasicMessengerConfig) GetPath() string {
+	return c.path
+}
+
+func (c BasicMessengerConfig) GetLocale() string {
+	return c.locale
+}
+
+func (c BasicMessengerConfig) GetFragmentName() string {
+	return c.fragmentName
+}
+
 type Messenger interface {
 	GetFolder() string
 	Send(config MessengerConfig) error
@@ -31,12 +64,12 @@ var JsMessengerTemplate *template.Template
 func init() {
 	var err error
 	JsMessengerTemplate, err = template.New("jsMessengerTemplate").Parse(`
-        export default {
-            {{ range . }}
-                {{.Key}}:"{{.Translated}}",
-            {{ end }}
-        }
-    `)
+export default {
+    {{- range . }}
+    {{.Key}}: "{{.Translated}}",
+{{ end -}}
+}
+`)
 	if err != nil {
 		log.Fatal(err)
 	}
