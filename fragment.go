@@ -12,10 +12,6 @@ type Fragment struct {
 	Translations Translations
 }
 
-func (f Fragment) getPairsByLocale(locale string) {
-
-}
-
 // Lint check problems of Fragment
 func (f Fragment) Lint() []error {
 	errors := make([]error, 0)
@@ -38,6 +34,68 @@ func (f Fragment) Lint() []error {
 		}
 	}
 	return errors
+}
+
+type LocaleTranslations struct {
+	Locale       string
+	Translations map[string]string
+}
+
+func (lt *LocaleTranslations) Add(key, translated string) {
+	lt.Translations[key] = translated
+}
+
+func NewLocaleTranslations(locale string) *LocaleTranslations {
+	return &LocaleTranslations{
+		Locale:       locale,
+		Translations: make(map[string]string, 1),
+	}
+}
+
+type LocaleMap struct {
+	data map[string]*LocaleTranslations
+}
+
+func (l LocaleMap) Contain(locale string) bool {
+	_, exist := l.data[locale]
+	return exist
+}
+
+func (l *LocaleMap) Add(locale, key, translated string) {
+	if !l.Contain(locale) {
+		l.data[locale] = NewLocaleTranslations(locale)
+	}
+	l.data[locale].Add(key, translated)
+}
+
+func (l LocaleMap) Get(locale string) (t LocaleTranslations, exist bool) {
+	m, exist := l.data[locale]
+	if exist {
+		t = *m
+	}
+	return
+}
+
+func MergeLocaleMap(maps ...LocaleMap) LocaleMap {
+	merged := LocaleMap{
+		data: make(map[string]*LocaleTranslations),
+	}
+
+	return merged
+}
+
+func (f Fragment) GetLocaleMap() *LocaleMap {
+	localeMap := &LocaleMap{
+		data: make(map[string]*LocaleTranslations, 1),
+	}
+	for k, ts := range f.Translations {
+		for entry := range ts.Iterate() {
+			locale := entry.Locale
+			translated := entry.Translated
+			localeMap.Add(locale, k, translated)
+		}
+	}
+	return localeMap
 }
 
 type FragmentDifferentLocalesError struct {

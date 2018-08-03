@@ -79,6 +79,19 @@ type ChineseConvertor struct {
 	transformFunc func(string) string
 }
 
+func (cc ChineseConvertor) Apply(t Translation) {
+	if cc.appliable(t) {
+		from, _ := t.Get(cc.From)
+		t.Set(cc.To, cc.transformFunc(from))
+	}
+}
+
+func (cc ChineseConvertor) appliable(t Translation) bool {
+	_, fromExist := t.Get(cc.From)
+	_, toExist := t.Get(cc.To)
+	return fromExist && !toExist
+}
+
 func NewChineseConvertor(mode, from, to string) (*ChineseConvertor, error) {
 	var transformFunc func(string) string
 	switch mode {
@@ -96,17 +109,4 @@ func NewChineseConvertor(mode, from, to string) (*ChineseConvertor, error) {
 		From:          from,
 		To:            to,
 	}, nil
-}
-
-func (cc ChineseConvertor) Apply(t Translation) {
-	if cc.appliable(t) {
-		from, _ := t.Get(cc.From)
-		t.Set(cc.To, cc.transformFunc(from))
-	}
-}
-
-func (cc ChineseConvertor) appliable(t Translation) bool {
-	_, fromExist := t.Get(cc.From)
-	_, toExist := t.Get(cc.To)
-	return fromExist && !toExist
 }

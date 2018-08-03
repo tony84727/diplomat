@@ -6,6 +6,11 @@ import (
 	"github.com/go-yaml/yaml"
 )
 
+type TranslateEntry struct {
+	Locale     string
+	Translated string
+}
+
 // Translation presents languageCode => translatedText mapping
 type Translation struct {
 	data map[string]string
@@ -26,6 +31,20 @@ func (t Translation) GetLocales() []string {
 		locales = append(locales, locale)
 	}
 	return locales
+}
+func (t Translation) Iterate() <-chan TranslateEntry {
+	c := make(chan TranslateEntry)
+	m := make(map[string]string, len(t.data))
+	for k, v := range t.data {
+		m[k] = v
+	}
+	go func() {
+		defer close(c)
+		for k, v := range m {
+			c <- TranslateEntry{k, v}
+		}
+	}()
+	return c
 }
 
 func (t *Translation) UnmarshalYAML(unmarshal func(interface{}) error) error {

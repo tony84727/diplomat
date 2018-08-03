@@ -5,13 +5,18 @@ settings:
       mode: t2s
       from: zh-TW
       to: zh-CN
+  copy:
+  - from: en
+    to: fr
 fragments:
   admin:
     description: translations for admin page
     translations:
       admin:
         zh-TW: 管理員
-        en-US: Admin
+        en: Admin
 output:
-- type: js
+  fragments:
+  - type: js
+    name: "{{.Locale}}.{{.FragmentName}}.js"
   
