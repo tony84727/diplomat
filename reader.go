@@ -7,16 +7,29 @@ import (
 )
 
 // Translation presents languageCode => translatedText mapping
-type Translation = map[string]string
+type Translation struct {
+	data map[string]string
+}
+
+func (t Translation) Get(locale string) (translated string, exist bool) {
+	translated, exist = t.data[locale]
+	return
+}
+
+func (t Translation) Set(locale, translated string) {
+	t.data[locale] = translated
+}
+
+func (t Translation) GetLocales() []string {
+	locales := make([]string, 0, 1)
+	for locale := range t.data {
+		locales = append(locales, locale)
+	}
+	return locales
+}
 
 // Translations presents translationKey => translation (for different language) mapping
 type Translations = map[string]Translation
-
-// Fragment is a group of translations with additional information.
-type Fragment struct {
-	Description  string
-	Translations Translations
-}
 
 // FragmentMap presents fragementName => Fragment mapping.
 type FragmentMap = map[string]Fragment
@@ -39,12 +52,21 @@ type Output struct {
 	Type string
 }
 
+type FragmentOutputSetting struct {
+	Type string
+	Name string
+}
+
+type OutputSetting struct {
+	Fragments []FragmentOutputSetting
+}
+
 // Outline is the struct of translation file.
 type Outline struct {
 	Settings  Settings
 	Version   string
 	Fragments FragmentMap
-	Output    []Output
+	Output    OutputSetting
 }
 
 func Read(path string) (*Outline, error) {
