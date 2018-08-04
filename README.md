@@ -6,7 +6,7 @@ diplomat
 2. Auto chinese convertion (simplied <=> tranditional)
 
 ## Translation file format (see testdata/outline.yaml)
-```
+```yaml
 version: '1'
 settings:
   chinese:
@@ -31,6 +31,17 @@ output:
 ```
 
 Above configuration will generate three files:
-1. en.admin.js
-2. zh-CN.admin.js
-3. zh-TW.admin.js
+```js
+// en.admin.js
+export default {
+    admin: "Admin",
+}
+// zh-CN.admin.js
+export default {
+    admin: "管理员",
+}
+// zh-TW.admin.js
+export default {
+    admin: "管理員",
+}
+```
