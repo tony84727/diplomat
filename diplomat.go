@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/go-yaml/yaml"
 	"github.com/siongui/gojianfan"
@@ -34,6 +35,7 @@ func (d Diplomat) GetOutline() Outline {
 }
 
 func (d Diplomat) Output() error {
+	var wg sync.WaitGroup
 	for fragmentName, f := range d.outline.Fragments {
 		locales := f.GetLocaleMap()
 		for _, locale := range locales.GetLocales() {
@@ -44,41 +46,42 @@ func (d Diplomat) Output() error {
 					if err != nil {
 						return err
 					}
-					defer dir.Close()
-					messengerHandler(
-						fragmentName,
-						locale,
-						outConfig.Name,
-						dir,
-					)
+					wg.Add(1)
+					go func(fragmentName, locale, name string, content LocaleTranslations, path string) {
+						messengerHandler(
+							fragmentName,
+							locale,
+							name,
+							content,
+							path,
+						)
+						wg.Done()
+					}(fragmentName, locale, outConfig.Name, *locales.data[locale], dir)
 				}
 			}
 		}
 	}
+	wg.Wait()
 
 	return nil
 }
 
-func (d Diplomat) dirForMessenger(messengerType string) (*os.File, error) {
+func (d Diplomat) dirForMessenger(messengerType string) (string, error) {
 	path := filepath.Join(d.outputPath, messengerType)
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			err := os.MkdirAll(path, 0755)
 			if err != nil {
-				return nil, err
+				return path, err
 			}
 		}
-		return nil, err
+		return path, err
 	}
 	if !info.IsDir() {
-		return nil, fmt.Errorf("output dir for [%s](%s) already exist, but is not a directory", messengerType, path)
+		return path, fmt.Errorf("output dir for [%s](%s) already exist, but is not a directory", messengerType, path)
 	}
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	return f, err
+	return path, err
 }
 
 func (d Diplomat) hasMessenger(messengerType string) (MessengerHandler, bool) {
@@ -106,7 +109,7 @@ func (d Diplomat) applyTransformers() {
 	}
 }
 
-type MessengerHandler func(fragmentName, locale, name string, outputDir *os.File)
+type MessengerHandler func(fragmentName, locale, name string, content LocaleTranslations, path string)
 
 func (d *Diplomat) RegisterMessenger(name string, messenger MessengerHandler) {
 	d.messengerHandlers[name] = messenger
