@@ -3,15 +3,17 @@ package diplomat
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"github.com/go-yaml/yaml"
 	"github.com/siongui/gojianfan"
 )
 
 type Diplomat struct {
-	outline    Outline
-	outputPath string
-	messengers map[string]Messenger
+	outline           Outline
+	outputPath        string
+	messengerHandlers map[string]MessengerHandler
 }
 
 func (d *Diplomat) applyChineseConvertor(mode, from, to string) error {
@@ -32,7 +34,66 @@ func (d Diplomat) GetOutline() Outline {
 }
 
 func (d Diplomat) Output() error {
+	for fragmentName, f := range d.outline.Fragments {
+		locales := f.GetLocaleMap()
+		for _, locale := range locales.GetLocales() {
+			for _, outConfig := range d.outline.Output.Fragments {
+				messengerHandler, exist := d.hasMessenger(outConfig.Type)
+				if exist {
+					dir, err := d.dirForMessenger(outConfig.Type)
+					if err != nil {
+						return err
+					}
+					defer dir.Close()
+					messengerHandler(
+						fragmentName,
+						locale,
+						outConfig.Name,
+						dir,
+					)
+				}
+			}
+		}
+	}
+
 	return nil
+}
+
+func (d Diplomat) dirForMessenger(messengerType string) (*os.File, error) {
+	path := filepath.Join(d.outputPath, messengerType)
+	info, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err := os.MkdirAll(path, 0755)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return nil, err
+	}
+	if !info.IsDir() {
+		return nil, fmt.Errorf("output dir for [%s](%s) already exist, but is not a directory", messengerType, path)
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	return f, err
+}
+
+func (d Diplomat) hasMessenger(messengerType string) (MessengerHandler, bool) {
+	m, exist := d.messengerHandlers[messengerType]
+	return m, exist
+}
+
+func (d Diplomat) getAllLocales() LocaleMap {
+	maps := make([]LocaleMap, len(d.outline.Fragments))
+	c := 0
+	for _, f := range d.outline.Fragments {
+		maps[c] = *f.GetLocaleMap()
+		c++
+	}
+	return MergeLocaleMap(maps...)
 }
 
 func (d Diplomat) applyTransformers() {
@@ -45,8 +106,10 @@ func (d Diplomat) applyTransformers() {
 	}
 }
 
-func (d *Diplomat) RegisterMessenger(name string, messenger Messenger) {
-	d.messengers[name] = messenger
+type MessengerHandler func(fragmentName, locale, name string, outputDir *os.File)
+
+func (d *Diplomat) RegisterMessenger(name string, messenger MessengerHandler) {
+	d.messengerHandlers[name] = messenger
 }
 
 func NewDiplomatForFile(path string, outputPath string) (*Diplomat, error) {
@@ -65,9 +128,9 @@ func NewDiplomatForFile(path string, outputPath string) (*Diplomat, error) {
 
 func NewDiplomat(outline Outline, outputPath string) Diplomat {
 	d := Diplomat{
-		outline:    outline,
-		outputPath: outputPath,
-		messengers: make(map[string]Messenger, 1),
+		outline:           outline,
+		outputPath:        outputPath,
+		messengerHandlers: make(map[string]MessengerHandler, 1),
 	}
 	d.applyTransformers()
 	return d

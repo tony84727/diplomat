@@ -76,6 +76,44 @@ func (l LocaleMap) Get(locale string) (t LocaleTranslations, exist bool) {
 	return
 }
 
+func (l LocaleMap) GetLocales() []string {
+	locales := make([]string, len(l.data))
+	c := 0
+	for k := range l.data {
+		locales[c] = k
+		c++
+	}
+	return locales
+}
+
+func (l LocaleMap) IterateLocale(locale string) <-chan TranslationPair {
+	t, ok := l.data[locale]
+	if !ok {
+		return nil
+	}
+	c := make(chan TranslationPair)
+	go func() {
+		for key, translated := range t.Translations {
+			c <- TranslationPair{
+				Key: key,
+				Translated: translated,
+			}
+		}
+		close(c)
+	}()
+	return c
+}
+
+func (l LocaleMap) GetLocaleTranslationPairs(locale string) []TranslationPair {
+	buffer := make([]TranslationPair, 0)
+	c := 0
+	for p := range l.IterateLocale(locale) {
+		buffer[c] = p
+		c++
+	}
+	return buffer
+}
+
 func MergeLocaleMap(maps ...LocaleMap) LocaleMap {
 	merged := LocaleMap{
 		data: make(map[string]*LocaleTranslations),

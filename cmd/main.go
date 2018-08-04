@@ -25,5 +25,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	d.Output()
 	fmt.Printf("%v", d.GetOutline())
 }
