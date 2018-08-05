@@ -2,6 +2,21 @@ diplomat
 ---------
 [![Build Status](https://travis-ci.org/MinecraftXwinP/diplomat.svg?branch=master)](https://travis-ci.org/MinecraftXwinP/diplomat)
 [![GoDoc](https://godoc.org/github.com/MinecraftXwinP/diplomat?status.svg)](https://godoc.org/github.com/MinecraftXwinP/diplomat)
+## Usage
+
+build diplomat/cmd package
+`cd cmd && go build`
+
+```
+Usage: cmd <flags> <subcommand> <subcommand args>
+
+Subcommands:
+        create           generate example outline file
+        flags            describe all known top-level flags
+        generate         generate language modules
+        help             describe subcommands and their syntax
+```
+
 ## Goal
 
 1. Generate translation module
