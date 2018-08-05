@@ -1,5 +1,6 @@
 diplomat
 ---------
+[![Build Status](https://travis-ci.org/MinecraftXwinP/diplomat.svg?branch=master)](https://travis-ci.org/MinecraftXwinP/diplomat)
 ## Goal
 
 1. Generate translation module
