@@ -75,6 +75,7 @@ func (d Diplomat) dirForMessenger(messengerType string) (string, error) {
 			if err != nil {
 				return path, err
 			}
+			return path, nil
 		}
 		return path, err
 	}
