@@ -45,4 +45,8 @@ export default {
 export default {
     admin: "管理員",
 }
+// fr.admin.js
+export default {
+    admin: "Admin",
+}
 ```

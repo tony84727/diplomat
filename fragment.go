@@ -95,7 +95,7 @@ func (l LocaleMap) IterateLocale(locale string) <-chan TranslationPair {
 	go func() {
 		for key, translated := range t.Translations {
 			c <- TranslationPair{
-				Key: key,
+				Key:        key,
 				Translated: translated,
 			}
 		}

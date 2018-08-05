@@ -107,6 +107,23 @@ func (d Diplomat) applyTransformers() {
 			d.outline.Settings.Chinese.Convert.To,
 		)
 	}
+	d.applyCopyConvertor()
+}
+
+func (d *Diplomat) applyCopyConvertor() {
+	if len(d.outline.Settings.Copy) <= 0 {
+		return
+	}
+	for _, f := range d.outline.Fragments {
+		for _, cp := range d.outline.Settings.Copy {
+			for _, translation := range f.Translations {
+				translated, exist := translation.Get(cp.From)
+				if exist {
+					translation.Set(cp.To, translated)
+				}
+			}
+		}
+	}
 }
 
 type MessengerHandler func(fragmentName, locale, name string, content LocaleTranslations, path string)

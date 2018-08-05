@@ -67,8 +67,14 @@ type ChineseSetting struct {
 	Convert ChineseConvertSetting
 }
 
+type CopySetting struct {
+	From string
+	To   string
+}
+
 type Settings struct {
 	Chinese *ChineseSetting `yaml:",omitempty"`
+	Copy    []CopySetting
 }
 
 type Output struct {
