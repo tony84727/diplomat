@@ -3,18 +3,24 @@ package diplomat
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/go-yaml/yaml"
 	"github.com/siongui/gojianfan"
 )
 
 type Diplomat struct {
 	outline           Outline
+	outlinePath       string
 	outputPath        string
 	messengerHandlers map[string]MessengerHandler
+	watch             bool
+	watcherEvents     <-chan fsnotify.Event
 }
 
 func (d *Diplomat) applyChineseConvertor(mode, from, to string) error {
@@ -133,6 +139,28 @@ func (d *Diplomat) RegisterMessenger(name string, messenger MessengerHandler) {
 	d.messengerHandlers[name] = messenger
 }
 
+func (d *Diplomat) Watch() {
+	for range throttle(20*time.Millisecond, d.watcherEvents) {
+		data, err := ioutil.ReadFile(d.outlinePath)
+		if err != nil {
+			log.Println("outline read error", err)
+			continue
+		}
+		var newOutline Outline
+		err = yaml.Unmarshal(data, &newOutline)
+		if err != nil {
+			log.Println("outline parse error", err)
+			continue
+		}
+		d.outline = newOutline
+		d.applyTransformers()
+		err = d.Output()
+		if err != nil {
+			log.Println("output error", err)
+		}
+	}
+}
+
 func NewDiplomatForFile(path string, outputPath string) (*Diplomat, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -144,7 +172,23 @@ func NewDiplomatForFile(path string, outputPath string) (*Diplomat, error) {
 		return nil, err
 	}
 	dip := NewDiplomat(outline, outputPath)
+	dip.outlinePath = path
 	return &dip, nil
+}
+
+func NewDiplomatWatchFile(path string, outputPath string) (*Diplomat, error) {
+	d, err := NewDiplomatForFile(path, outputPath)
+	if err != nil {
+		return d, err
+	}
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return nil, err
+	}
+	watcher.Add(path)
+	d.watcherEvents = watcher.Events
+
+	return d, nil
 }
 
 func NewDiplomat(outline Outline, outputPath string) Diplomat {

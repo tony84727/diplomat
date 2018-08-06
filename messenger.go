@@ -50,11 +50,6 @@ func (c BasicMessengerConfig) GetFragmentName() string {
 	return c.fragmentName
 }
 
-// type Messenger interface {
-// 	GetFolder() string
-// 	Send(config MessengerConfig) error
-// }
-
 var JsMessengerTemplate *template.Template
 
 func init() {

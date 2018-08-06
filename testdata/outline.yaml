@@ -19,4 +19,3 @@ output:
   fragments:
   - type: js
     name: "{{.Locale}}.{{.FragmentName}}.js"
-  

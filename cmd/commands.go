@@ -91,6 +91,7 @@ func (c *createCommand) Execute(_ context.Context, f *flag.FlagSet, _ ...interfa
 type generateCommand struct {
 	outlineFile string
 	outdir      string
+	watch       bool
 }
 
 func (*generateCommand) Name() string {
@@ -108,19 +109,29 @@ func (*generateCommand) Usage() string {
 func (g *generateCommand) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&g.outlineFile, "f", "outline.yaml", "path to outline file")
 	f.StringVar(&g.outdir, "out", "out", "output dir")
+	f.BoolVar(&g.watch, "watch", false, "watch file changes")
 }
 
 func (g *generateCommand) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	d, err := diplomat.NewDiplomatForFile(g.outlineFile, g.outdir)
+	initFunc := diplomat.NewDiplomatForFile
+	if g.watch {
+		initFunc = diplomat.NewDiplomatWatchFile
+	}
+	d, err := initFunc(g.outlineFile, g.outdir)
 	if err != nil {
 		log.Println(err)
 		return subcommands.ExitFailure
 	}
 	d.RegisterMessenger("js", diplomat.JsModuleMessengerHandler)
-	err = d.Output()
-	if err != nil {
-		log.Println(err)
-		return subcommands.ExitFailure
+	if g.watch {
+		d.Watch()
+	} else {
+		err = d.Output()
+		if err != nil {
+			log.Println(err)
+			return subcommands.ExitFailure
+		}
 	}
+
 	return subcommands.ExitSuccess
 }
