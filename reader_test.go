@@ -73,3 +73,32 @@ func TestYAMLOptionGet(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 3, c)
 }
+
+func TestMarshalYAMLOption(t *testing.T) {
+	option := YAMLOption{
+		data: map[interface{}]interface{}{
+			"key1": []interface{}{1, 2, 3},
+			"key2": map[interface{}]interface{}{
+				"a": "av",
+				"b": "bv",
+			},
+		},
+	}
+	data, err := yaml.Marshal(option)
+	assert.NoError(t, err)
+	var out YAMLOption
+	err = yaml.Unmarshal(data, &out)
+	assert.NoError(t, err)
+	assert.Equal(t, option, out)
+}
+
+func TestOutlineMarshalAndUnmarshal(t *testing.T) {
+	data, err := ioutil.ReadFile("testdata/outline.yaml")
+	assert.NoError(t, err)
+	var outline Outline
+	err = yaml.Unmarshal(data, &outline)
+	assert.NoError(t, err)
+	output, err := yaml.Marshal(outline)
+	assert.NoError(t, err)
+	assert.Equal(t, string(data), string(output))
+}
