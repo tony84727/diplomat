@@ -3,6 +3,7 @@ package diplomat
 import (
 	"fmt"
 	"io/ioutil"
+	"strconv"
 
 	"github.com/go-yaml/yaml"
 )
@@ -71,4 +72,68 @@ func Read(path string) (*Outline, error) {
 		return nil, err
 	}
 	return &content, nil
+}
+
+// NestedKeyValue is a tree node to store nested translations.
+type NestedKeyValue struct {
+	data map[string]interface{}
+}
+
+func nkvDataFromStringMap(m map[string]interface{}) (map[string]interface{}, error) {
+	for k, p := range m {
+		switch v := p.(type) {
+		case int:
+			m[k] = strconv.Itoa(v)
+			break
+		case string:
+			m[k] = v
+		case map[interface{}]interface{}:
+			stringMap := make(map[string]interface{}, len(v))
+			for i, j := range v {
+				stringMap[i.(string)] = j
+			}
+			anotherNkv, err := nkvDataFromStringMap(stringMap)
+			if err != nil {
+				return m, err
+			}
+			m[k] = NestedKeyValue{anotherNkv}
+			break
+		default:
+			return m, fmt.Errorf("unexcepted type: %T at %s", v, k)
+		}
+	}
+	return m, nil
+}
+
+func (nkv *NestedKeyValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var root map[string]interface{}
+	err := unmarshal(&root)
+	if err != nil {
+		return err
+	}
+	d, err := nkvDataFromStringMap(root)
+	if err != nil {
+		return err
+	}
+	nkv.data = d
+	return nil
+}
+
+func (nkv NestedKeyValue) GetKey(paths ...string) (value interface{}, exist bool) {
+	if len(paths) <= 0 {
+		return nkv, true
+	}
+	d, exist := nkv.data[paths[0]]
+	if !exist {
+		return nil, false
+	}
+	v, ok := d.(string)
+	if ok {
+		return v, true
+	}
+	return d.(NestedKeyValue).GetKey(paths[1:]...)
+}
+
+type PartialTranslation struct {
+	data map[string]NestedKeyValue
 }

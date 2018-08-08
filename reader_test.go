@@ -8,20 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTranslationUnmarshalYML(t *testing.T) {
-	data, err := ioutil.ReadFile("testdata/translation.yaml")
-	assert.NoError(t, err)
-	var translation Translation
-	err = yaml.Unmarshal(data, &translation)
-	assert.NoError(t, err)
-	chinese, exist := translation.Get("zh-TW")
-	assert.True(t, exist, "should have zh-TW translation")
-	assert.Equal(t, "管理員", chinese)
-	english, exist := translation.Get("en-US")
-	assert.True(t, exist, "show have en-US translation")
-	assert.Equal(t, "Admin", english)
-}
-
 func TestUnmarshalOutline(t *testing.T) {
 	outline := assertUnmarshalOutline(t, "testdata/outline.yaml")
 	assert.Len(t, outline.Preprocessors, 2)
@@ -101,4 +87,21 @@ func TestOutlineMarshalAndUnmarshal(t *testing.T) {
 	output, err := yaml.Marshal(outline)
 	assert.NoError(t, err)
 	assert.Equal(t, string(data), string(output))
+}
+
+func TestUnmarshalNestedKeyValue(t *testing.T) {
+	data, err := ioutil.ReadFile("testdata/admin.yaml")
+	assert.NoError(t, err)
+	var nkv NestedKeyValue
+	err = yaml.Unmarshal(data, &nkv)
+	assert.NoError(t, err)
+	value, exist := nkv.GetKey("admin", "admin", "en")
+	assert.True(t, exist)
+	assert.Equal(t, "Admin", value)
+	anotherMap, exist := nkv.GetKey("admin", "message", "hello")
+	assert.True(t, exist)
+	assert.IsType(t, nkv, anotherMap)
+	value, exist = anotherMap.(NestedKeyValue).GetKey("zh-TW")
+	assert.True(t, exist)
+	assert.Equal(t, "您好", value)
 }

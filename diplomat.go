@@ -8,7 +8,6 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-yaml/yaml"
-	"github.com/siongui/gojianfan"
 )
 
 type Diplomat struct {
@@ -91,42 +90,4 @@ func NewDiplomat(outline Outline, outputPath string) Diplomat {
 		messengerHandlers: make(map[string]MessengerHandler, 1),
 	}
 	return d
-}
-
-type ChineseConvertor struct {
-	From          string
-	To            string
-	transformFunc func(string) string
-}
-
-func (cc ChineseConvertor) Apply(t Translation) {
-	if cc.appliable(t) {
-		from, _ := t.Get(cc.From)
-		t.Set(cc.To, cc.transformFunc(from))
-	}
-}
-
-func (cc ChineseConvertor) appliable(t Translation) bool {
-	_, fromExist := t.Get(cc.From)
-	_, toExist := t.Get(cc.To)
-	return fromExist && !toExist
-}
-
-func NewChineseConvertor(mode, from, to string) (*ChineseConvertor, error) {
-	var transformFunc func(string) string
-	switch mode {
-	case "s2f":
-		transformFunc = gojianfan.S2T
-		break
-	case "t2s":
-		transformFunc = gojianfan.T2S
-		break
-	default:
-		return nil, fmt.Errorf("chinese convertor: unknown mode %s", mode)
-	}
-	return &ChineseConvertor{
-		transformFunc: transformFunc,
-		From:          from,
-		To:            to,
-	}, nil
 }

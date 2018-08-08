@@ -7,35 +7,6 @@ import (
 )
 
 // Fragment is a group of translations with additional information.
-type Fragment struct {
-	Description  string
-	Translations Translations
-}
-
-// Lint check problems of Fragment
-func (f Fragment) Lint() []error {
-	errors := make([]error, 0)
-	// check all translations have the same locales
-	var basisKey string
-	var locales goset.Set
-	for k, ts := range f.Translations {
-		if locales == nil {
-			basisKey = k
-			locales = goset.NewSetFromSlice(stringSliceToInterfaceSlice(ts.GetLocales()))
-			continue
-		}
-		diff := locales.Difference(goset.NewSetFromSlice(stringSliceToInterfaceSlice(ts.GetLocales())))
-		if len(diff.ToSlice()) > 0 {
-			errors = append(errors, &FragmentDifferentLocalesError{
-				Basis: basisKey,
-				Key:   k,
-				Diff:  diff,
-			})
-		}
-	}
-	return errors
-}
-
 type LocaleTranslations struct {
 	Locale       string
 	Translations map[string]string
@@ -120,20 +91,6 @@ func MergeLocaleMap(maps ...LocaleMap) LocaleMap {
 	}
 
 	return merged
-}
-
-func (f Fragment) GetLocaleMap() *LocaleMap {
-	localeMap := &LocaleMap{
-		data: make(map[string]*LocaleTranslations, 1),
-	}
-	for k, ts := range f.Translations {
-		for entry := range ts.Iterate() {
-			locale := entry.Locale
-			translated := entry.Translated
-			localeMap.Add(locale, k, translated)
-		}
-	}
-	return localeMap
 }
 
 type FragmentDifferentLocalesError struct {
