@@ -2,25 +2,15 @@ package diplomat
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/go-yaml/yaml"
 )
 
 type Diplomat struct {
-	outline           Outline
-	outlinePath       string
 	outputPath        string
 	messengerHandlers map[string]MessengerHandler
-	watch             bool
-	watcherEvents     <-chan fsnotify.Event
-}
-
-func (d Diplomat) GetOutline() Outline {
-	return d.outline
 }
 
 func (d Diplomat) dirForMessenger(messengerType string) (string, error) {
@@ -53,18 +43,8 @@ func (d *Diplomat) RegisterMessenger(name string, messenger MessengerHandler) {
 	d.messengerHandlers[name] = messenger
 }
 
-func NewDiplomatForFile(path string, outputPath string) (*Diplomat, error) {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	var outline Outline
-	err = yaml.Unmarshal(data, &outline)
-	if err != nil {
-		return nil, err
-	}
-	dip := NewDiplomat(outline, outputPath)
-	dip.outlinePath = path
+func NewDiplomatForDir(path string, outputPath string) (*Diplomat, error) {
+	dip := NewDiplomat(outputPath)
 	return &dip, nil
 }
 
@@ -83,9 +63,8 @@ func NewDiplomatWatchFile(path string, outputPath string) (*Diplomat, error) {
 	return d, nil
 }
 
-func NewDiplomat(outline Outline, outputPath string) Diplomat {
+func NewDiplomat(outputPath string) Diplomat {
 	d := Diplomat{
-		outline:           outline,
 		outputPath:        outputPath,
 		messengerHandlers: make(map[string]MessengerHandler, 1),
 	}

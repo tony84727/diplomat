@@ -3,7 +3,14 @@ package diplomat
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
+	"path/filepath"
 	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/fsnotify/fsnotify"
 
 	"github.com/go-yaml/yaml"
 )
@@ -162,5 +169,180 @@ func (nkv *NestedKeyValue) Put(value string, paths ...string) {
 }
 
 type PartialTranslation struct {
+	path string
 	data map[string]NestedKeyValue
+}
+
+func NewReader(dir string) *Reader {
+	return &Reader{
+		dir:                    dir,
+		outlineChan:            make(chan *Outline, 1),
+		partialTranslationChan: make(chan *PartialTranslation, 1),
+		errChan:                make(chan error, 1),
+	}
+}
+
+type Reader struct {
+	dir                    string
+	outlineChan            chan *Outline
+	partialTranslationChan chan *PartialTranslation
+	errChan                chan error
+}
+
+func (r Reader) pushError(e error) {
+	go func() {
+		ticker := time.NewTicker(time.Second)
+		select {
+		case <-ticker.C:
+			return
+		case r.errChan <- e:
+			log.Println("an error drop by reader", e)
+			return
+		}
+	}()
+}
+
+func (r Reader) Read() {
+	var mainWg sync.WaitGroup
+	mainWg.Add(1)
+	go func() {
+		o, err := parseOutline(filepath.Join(r.dir, "diplomat.yaml"))
+		if err != nil {
+			r.errChan <- err
+			return
+		}
+		r.outlineChan <- o
+		close(r.outlineChan)
+		mainWg.Done()
+	}()
+	mainWg.Add(1)
+	go func() {
+		var wg sync.WaitGroup
+		paths, err := filepath.Glob(filepath.Join(r.dir, "**", "*.yaml"))
+		if err != nil {
+			r.pushError(err)
+			return
+		}
+		for _, p := range paths {
+			if isOutlineFile(p) {
+				continue
+			}
+			wg.Add(1)
+			go func(path string) {
+				t, err := parsePartialTranslation(path)
+				if err != nil {
+					r.pushError(err)
+					return
+				}
+				r.partialTranslationChan <- t
+				wg.Done()
+			}(p)
+		}
+		wg.Wait()
+		close(r.partialTranslationChan)
+		mainWg.Done()
+	}()
+
+	mainWg.Wait()
+
+}
+
+func (r Reader) Watch() {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		r.pushError(err)
+	}
+	watcher.Add(r.dir)
+	for e := range nameBaseThrottler(watcher.Events) {
+		if isOutlineFile(e.Name) {
+			go func(path string) {
+				o, err := parseOutline(path)
+				if err != nil {
+					r.pushError(err)
+					return
+				}
+				r.outlineChan <- o
+			}(e.Name)
+		} else {
+			go func(path string) {
+				t, err := parsePartialTranslation(path)
+				if err != nil {
+					r.pushError(err)
+					return
+				}
+				r.partialTranslationChan <- t
+			}(e.Name)
+		}
+	}
+}
+
+func isOutlineFile(name string) bool {
+	return strings.TrimRight(filepath.Base(name), filepath.Ext(name)) == "diplomat"
+}
+
+func parseOutline(name string) (*Outline, error) {
+	data, err := ioutil.ReadFile(name)
+	if err != nil {
+		return nil, err
+	}
+	var outline *Outline
+	err = yaml.Unmarshal(data, outline)
+	if err != nil {
+		return nil, err
+	}
+	return outline, nil
+}
+
+func parsePartialTranslation(path string) (*PartialTranslation, error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var t *PartialTranslation
+	err = yaml.Unmarshal(data, t)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+type watchThrottler struct {
+	source     <-chan fsnotify.Event
+	out        chan<- fsnotify.Event
+	throttlers map[string]chan<- fsnotify.Event
+}
+
+func (wt watchThrottler) loop() {
+	for e := range wt.source {
+		c, exist := wt.throttlers[e.Name]
+		if !exist {
+			nc := make(chan fsnotify.Event, 1)
+			go func() {
+				for e := range throttle(time.Second, nc) {
+					wt.out <- e
+				}
+			}()
+			wt.throttlers[e.Name] = nc
+			c = nc
+		}
+		c <- e
+	}
+}
+
+func (wt watchThrottler) close() {
+	for _, c := range wt.throttlers {
+		close(c)
+	}
+	close(wt.out)
+}
+
+func nameBaseThrottler(source <-chan fsnotify.Event) <-chan fsnotify.Event {
+	c := make(chan fsnotify.Event, 1)
+	w := watchThrottler{
+		source,
+		c,
+		make(map[string]chan<- fsnotify.Event),
+	}
+	go w.loop()
+	return c
 }
