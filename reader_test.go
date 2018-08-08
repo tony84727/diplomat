@@ -105,3 +105,28 @@ func TestUnmarshalNestedKeyValue(t *testing.T) {
 	assert.True(t, exist)
 	assert.Equal(t, "您好", value)
 }
+
+func TestGetKeys(t *testing.T) {
+	data, err := nkvDataFromStringMap(map[string]interface{}{
+		"admin": map[interface{}]interface{}{
+			"zh-TW": "管理員",
+			"en":    "admin",
+		},
+		"message": map[interface{}]interface{}{
+			"hello": map[interface{}]interface{}{
+				"zh-TW": "您好",
+				"en":    "Hello!",
+			},
+		},
+	})
+	assert.NoError(t, err)
+	nkv := NestedKeyValue{
+		data: data,
+	}
+	assert.ElementsMatch(t, [][]string{
+		[]string{"admin", "zh-TW"},
+		[]string{"admin", "en"},
+		[]string{"message", "hello", "zh-TW"},
+		[]string{"message", "hello", "en"},
+	}, nkv.GetKeys())
+}

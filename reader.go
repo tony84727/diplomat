@@ -134,6 +134,33 @@ func (nkv NestedKeyValue) GetKey(paths ...string) (value interface{}, exist bool
 	return d.(NestedKeyValue).GetKey(paths[1:]...)
 }
 
+func (nkv NestedKeyValue) GetKeys() [][]string {
+	keys := make([][]string, 0, 1)
+	for k, v := range nkv.data {
+		switch i := v.(type) {
+		case string:
+			keys = append(keys, []string{k})
+			break
+		case NestedKeyValue:
+			nKeys := i.GetKeys()
+			for _, s := range nKeys {
+				keys = append(keys, append([]string{k}, s...))
+			}
+			break
+		default:
+			continue
+		}
+	}
+	return keys
+}
+
+func (nkv *NestedKeyValue) Put(value string, paths ...string) {
+	if len(paths) <= 0 {
+		panic("paths is empty")
+	}
+
+}
+
 type PartialTranslation struct {
 	data map[string]NestedKeyValue
 }
