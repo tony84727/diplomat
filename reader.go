@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/golang-collections/collections/stack"
+
 	"github.com/fsnotify/fsnotify"
 
 	"github.com/go-yaml/yaml"
@@ -193,6 +195,49 @@ func (nkv NestedKeyValue) filterBySelectorOnBase(base []string, s Selector) Nest
 
 func (nkv NestedKeyValue) FilterBySelector(s Selector) NestedKeyValue {
 	return nkv.filterBySelectorOnBase([]string{}, s)
+}
+
+func (nkv NestedKeyValue) HasKey(keys ...string) bool {
+	if len(keys) <= 0 {
+		return true
+	}
+	n, exist := nkv.data[keys[0]]
+	if !exist {
+		return false
+	}
+	_, isString := n.(string)
+	if isString {
+		return len(keys) <= 1
+	}
+	return n.(NestedKeyValue).HasKey(keys[1:]...)
+}
+
+func (nkv NestedKeyValue) LanguageHasKey(language string, keys ...string) bool {
+	keys = append(keys, language)
+	return nkv.HasKey(keys...)
+}
+
+func (nkv *NestedKeyValue) Set(path []string, value string) error {
+	s := stack.New()
+	var current interface{} = nkv
+	for i, p := range path {
+		switch v := current.(type) {
+		case string:
+			if i == len(path)-1 {
+				s.Pop().(NestedKeyValue).data[p] = value
+			} else {
+				return fmt.Errorf("%v is not a map", path[:i+1])
+			}
+			break
+		case NestedKeyValue:
+			if i == len(path)-1 {
+				return fmt.Errorf("%v is not a string", path[:i+1])
+			}
+			s.Push(v)
+			break
+		}
+	}
+	return nil
 }
 
 type PartialTranslation struct {

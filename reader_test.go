@@ -106,8 +106,8 @@ func TestUnmarshalNestedKeyValue(t *testing.T) {
 	assert.Equal(t, "您好", value)
 }
 
-func TestGetKeys(t *testing.T) {
-	data, err := nkvDataFromStringMap(map[string]interface{}{
+func getSampleNKV() NestedKeyValue {
+	data, _ := nkvDataFromStringMap(map[string]interface{}{
 		"admin": map[interface{}]interface{}{
 			"zh-TW": "管理員",
 			"en":    "admin",
@@ -119,10 +119,13 @@ func TestGetKeys(t *testing.T) {
 			},
 		},
 	})
-	assert.NoError(t, err)
-	nkv := NestedKeyValue{
+	return NestedKeyValue{
 		data: data,
 	}
+}
+
+func TestGetKeys(t *testing.T) {
+	nkv := getSampleNKV()
 	assert.ElementsMatch(t, [][]string{
 		[]string{"admin", "zh-TW"},
 		[]string{"admin", "en"},
@@ -132,22 +135,15 @@ func TestGetKeys(t *testing.T) {
 }
 
 func TestFilterBySelector(t *testing.T) {
-	data, err := nkvDataFromStringMap(map[string]interface{}{
-		"admin": map[interface{}]interface{}{
-			"zh-TW": "管理員",
-			"en":    "admin",
-		},
-		"message": map[interface{}]interface{}{
-			"hello": map[interface{}]interface{}{
-				"zh-TW": "您好",
-				"en":    "Hello!",
-			},
-		},
-	})
-	assert.NoError(t, err)
-	nkv := NestedKeyValue{
-		data: data,
-	}
+	nkv := getSampleNKV()
 	filtered := nkv.FilterBySelector(NewPrefixSelector("admin"))
 	assert.Len(t, filtered.data, 1)
+}
+
+func TestHasKey(t *testing.T) {
+	nkv := getSampleNKV()
+	assert.True(t, nkv.HasKey("admin", "zh-TW"))
+	assert.True(t, nkv.HasKey("message", "hello"))
+	assert.True(t, nkv.HasKey("message", "hello", "zh-TW"))
+	assert.False(t, nkv.HasKey("hello", "admin"))
 }
