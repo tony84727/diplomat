@@ -14,7 +14,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
-	"github.com/go-yaml/yaml"
+	yaml "gopkg.in/yaml.v2"
 )
 
 type YAMLOption struct {
@@ -26,7 +26,7 @@ func (y YAMLOption) Get(paths ...interface{}) (interface{}, error) {
 	for i, p := range paths {
 		switch v := p.(type) {
 		case string:
-			cv, ok := current.(map[interface{}]interface{})
+			cv, ok := current.(map[string]interface{})
 			if !ok {
 				return nil, fmt.Errorf("%v is not a map", paths[:i])
 			}
@@ -47,10 +47,75 @@ func (y *YAMLOption) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var varient interface{}
 	err := unmarshal(&varient)
 	if err != nil {
-		return nil
+		return err
 	}
-	y.data = varient
+	switch v := varient.(type) {
+	case map[interface{}]interface{}:
+		y.data = interfaceMapToStringMap(v)
+		break
+
+	case []interface{}:
+		// b, isByteSlice := v.([]byte)
+		// if isByteSlice {
+		// 	var o YAMLOption
+		// 	err = yaml.Unmarshal(b, &o)
+		// 	if err != nil {
+		// 		return nil
+		// 	}
+		// 	y = &o
+		// 	break
+		// }
+		y.data = checkInterfaceSlice(v)
+		break
+	default:
+		return fmt.Errorf("YAMLOption should be either map or slice")
+	}
 	return nil
+}
+
+func interfaceMapToStringMap(in map[interface{}]interface{}) map[string]interface{} {
+	out := make(map[string]interface{}, len(in))
+	for k, i := range in {
+		switch v := i.(type) {
+		case map[interface{}]interface{}:
+			out[k.(string)] = interfaceMapToStringMap(v)
+			break
+		case []interface{}:
+			out[k.(string)] = checkInterfaceSlice(v)
+			break
+		default:
+			out[k.(string)] = i
+		}
+	}
+	return out
+}
+
+func checkInterfaceSlice(in []interface{}) []interface{} {
+	out := make([]interface{}, len(in))
+	for i, e := range in {
+		switch v := e.(type) {
+		case map[interface{}]interface{}:
+			out[i] = interfaceMapToStringMap(v)
+			break
+		case []interface{}:
+			out[i] = checkInterfaceSlice(v)
+			break
+		default:
+			out[i] = e
+		}
+	}
+	return out
+}
+
+func (y YAMLOption) MarshalYAML() (interface{}, error) {
+	switch v := y.data.(type) {
+	case []interface{}:
+		return yaml.Marshal(v)
+	case map[string]interface{}:
+		return yaml.Marshal(v)
+	}
+	return nil, fmt.Errorf("unknown type %v", y)
+	// return yaml.Marshal(y.data)
 }
 
 type PreprocessorConfig struct {

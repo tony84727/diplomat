@@ -47,9 +47,9 @@ func TestUnmarshalPreprocessorConfig(t *testing.T) {
 
 func TestYAMLOptionGet(t *testing.T) {
 	option := YAMLOption{
-		data: map[interface{}]interface{}{
+		data: map[string]interface{}{
 			"key1": []interface{}{1, 2, 3},
-			"key2": map[interface{}]interface{}{
+			"key2": map[string]interface{}{
 				"a": "av",
 				"b": "bv",
 			},
@@ -60,11 +60,32 @@ func TestYAMLOptionGet(t *testing.T) {
 	assert.Equal(t, 3, c)
 }
 
-func TestMarshalYAMLOption(t *testing.T) {
+func TestYAMLOptionUnmarshal(t *testing.T) {
+	content := `a: av
+b: bv
+c:
+  - element1
+  - element2
+  - element3`
+	var o YAMLOption
+	err := yaml.Unmarshal([]byte(content), &o)
+	assert.NoError(t, err)
+	slice, err := o.Get("c")
+	assert.NoError(t, err)
+	assert.Len(t, slice, 3)
+	assert.Equal(t, "element1", slice.([]interface{})[0])
+	assert.Equal(t, "element2", slice.([]interface{})[1])
+	assert.Equal(t, "element3", slice.([]interface{})[2])
+	element3, err := o.Get("c", 2)
+	assert.NoError(t, err)
+	assert.Equal(t, "element3", element3)
+}
+
+func TestYAMLOptionMarshal(t *testing.T) {
 	option := YAMLOption{
-		data: map[interface{}]interface{}{
+		data: map[string]interface{}{
 			"key1": []interface{}{1, 2, 3},
-			"key2": map[interface{}]interface{}{
+			"key2": map[string]interface{}{
 				"a": "av",
 				"b": "bv",
 			},
@@ -72,21 +93,10 @@ func TestMarshalYAMLOption(t *testing.T) {
 	}
 	data, err := yaml.Marshal(option)
 	assert.NoError(t, err)
-	var out YAMLOption
-	err = yaml.Unmarshal(data, &out)
+	var o YAMLOption
+	err = yaml.Unmarshal(data, &o)
 	assert.NoError(t, err)
-	assert.Equal(t, option, out)
-}
-
-func TestOutlineMarshalAndUnmarshal(t *testing.T) {
-	data, err := ioutil.ReadFile("testdata/outline.yaml")
-	assert.NoError(t, err)
-	var outline Outline
-	err = yaml.Unmarshal(data, &outline)
-	assert.NoError(t, err)
-	output, err := yaml.Marshal(outline)
-	assert.NoError(t, err)
-	assert.Equal(t, string(data), string(output))
+	assert.Equal(t, option, o)
 }
 
 func TestUnmarshalNestedKeyValue(t *testing.T) {
