@@ -161,11 +161,38 @@ func (nkv NestedKeyValue) GetKeys() [][]string {
 	return keys
 }
 
-func (nkv *NestedKeyValue) Put(value string, paths ...string) {
-	if len(paths) <= 0 {
-		panic("paths is empty")
+func (nkv NestedKeyValue) filterBySelectorOnBase(base []string, s Selector) NestedKeyValue {
+	filtered := NestedKeyValue{
+		data: make(map[string]interface{}),
 	}
+	for k, i := range nkv.data {
+		key := make([]string, len(base)+1)
+		for b, bk := range base {
+			key[b] = bk
+		}
+		key[len(base)] = k
+		switch v := i.(type) {
+		case string:
+			if s.IsValid(key) {
+				filtered.data[k] = v
+			}
+			break
+		case NestedKeyValue:
+			if s.IsValid(key) {
+				filtered.data[k] = v
+			} else {
+				child := v.filterBySelectorOnBase(key, s)
+				if len(child.data) > 0 {
+					filtered.data[k] = child
+				}
+			}
+		}
+	}
+	return filtered
+}
 
+func (nkv NestedKeyValue) FilterBySelector(s Selector) NestedKeyValue {
+	return nkv.filterBySelectorOnBase([]string{}, s)
 }
 
 type PartialTranslation struct {

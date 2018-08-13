@@ -130,3 +130,24 @@ func TestGetKeys(t *testing.T) {
 		[]string{"message", "hello", "en"},
 	}, nkv.GetKeys())
 }
+
+func TestFilterBySelector(t *testing.T) {
+	data, err := nkvDataFromStringMap(map[string]interface{}{
+		"admin": map[interface{}]interface{}{
+			"zh-TW": "管理員",
+			"en":    "admin",
+		},
+		"message": map[interface{}]interface{}{
+			"hello": map[interface{}]interface{}{
+				"zh-TW": "您好",
+				"en":    "Hello!",
+			},
+		},
+	})
+	assert.NoError(t, err)
+	nkv := NestedKeyValue{
+		data: data,
+	}
+	filtered := nkv.FilterBySelector(NewPrefixSelector("admin"))
+	assert.Len(t, filtered.data, 1)
+}
