@@ -19,7 +19,7 @@ type ChineseTransformer struct {
 	to   string
 }
 
-func optionToChineseTransformerHandler(o YAMLOption) (TransformHandler, error) {
+func optionToChineseTransformer(o YAMLOption) (*ChineseTransformer, error) {
 	mode, err := o.Get("mode")
 	if err != nil {
 		return nil, err
@@ -36,10 +36,17 @@ func optionToChineseTransformerHandler(o YAMLOption) (TransformHandler, error) {
 	if strings.ToLower(mode.(string)) != "s2t" {
 		m = TranditionalToSimplified
 	}
-	transformer := ChineseTransformer{
+	return &ChineseTransformer{
 		mode: m,
 		from: from.(string),
 		to:   to.(string),
+	}, nil
+}
+
+func optionToChineseTransformerHandler(o YAMLOption) (TransformHandler, error) {
+	transformer, err := optionToChineseTransformer(o)
+	if err != nil {
+		return nil, err
 	}
 	return transformer.getTransformerHandler(), nil
 }
@@ -62,7 +69,6 @@ func (c ChineseTransformer) getTransformerHandler() TransformHandler {
 func (c ChineseTransformer) transform(in string) string {
 	if c.mode == SimplifiedToTranditonal {
 		return gojianfan.S2T(in)
-	} else {
-		return gojianfan.T2S(in)
 	}
+	return gojianfan.T2S(in)
 }
