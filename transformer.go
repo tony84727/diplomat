@@ -55,9 +55,14 @@ func (c ChineseTransformer) getTransformerHandler() TransformHandler {
 	return func(nkv NestedKeyValue) NestedKeyValue {
 		for _, keys := range nkv.GetKeys() {
 			if keys[len(keys)-1] == c.from {
-				to := append(keys[:len(keys)-1], c.to)
-				if !nkv.HasKey(to...) {
-					value, _ := nkv.GetKey(keys...)
+				to := make([]string, len(keys))
+				lastID := len(to) - 1
+				for i := 0; i < lastID; i++ {
+					to[i] = keys[i]
+				}
+				to[lastID] = c.to
+				value, exist := nkv.GetKey(keys...)
+				if exist {
 					nkv.Set(to, c.transform(value.(string)))
 				}
 			}

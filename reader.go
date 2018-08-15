@@ -1,6 +1,7 @@
 package diplomat
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,8 +10,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/golang-collections/collections/stack"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -55,16 +54,6 @@ func (y *YAMLOption) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		break
 
 	case []interface{}:
-		// b, isByteSlice := v.([]byte)
-		// if isByteSlice {
-		// 	var o YAMLOption
-		// 	err = yaml.Unmarshal(b, &o)
-		// 	if err != nil {
-		// 		return nil
-		// 	}
-		// 	y = &o
-		// 	break
-		// }
 		y.data = checkInterfaceSlice(v)
 		break
 	default:
@@ -161,6 +150,7 @@ func nkvDataFromStringMap(m map[string]interface{}) (map[string]interface{}, err
 			break
 		case string:
 			m[k] = v
+			break
 		case map[interface{}]interface{}:
 			stringMap := make(map[string]interface{}, len(v))
 			for i, j := range v {
@@ -170,7 +160,7 @@ func nkvDataFromStringMap(m map[string]interface{}) (map[string]interface{}, err
 			if err != nil {
 				return m, err
 			}
-			m[k] = NestedKeyValue{anotherNkv}
+			m[k] = &NestedKeyValue{anotherNkv}
 			break
 		default:
 			return m, fmt.Errorf("unexcepted type: %T at %s", v, k)
@@ -205,7 +195,7 @@ func (nkv NestedKeyValue) GetKey(paths ...string) (value interface{}, exist bool
 	if ok {
 		return v, true
 	}
-	return d.(NestedKeyValue).GetKey(paths[1:]...)
+	return d.(*NestedKeyValue).GetKey(paths[1:]...)
 }
 
 func (nkv NestedKeyValue) GetKeys() [][]string {
@@ -215,7 +205,7 @@ func (nkv NestedKeyValue) GetKeys() [][]string {
 		case string:
 			keys = append(keys, []string{k})
 			break
-		case NestedKeyValue:
+		case *NestedKeyValue:
 			nKeys := i.GetKeys()
 			for _, s := range nKeys {
 				keys = append(keys, append([]string{k}, s...))
@@ -244,7 +234,7 @@ func (nkv NestedKeyValue) filterBySelectorOnBase(base []string, s Selector) Nest
 				filtered.data[k] = v
 			}
 			break
-		case NestedKeyValue:
+		case *NestedKeyValue:
 			if s.IsValid(key) {
 				filtered.data[k] = v
 			} else {
@@ -263,18 +253,8 @@ func (nkv NestedKeyValue) FilterBySelector(s Selector) NestedKeyValue {
 }
 
 func (nkv NestedKeyValue) HasKey(keys ...string) bool {
-	if len(keys) <= 0 {
-		return true
-	}
-	n, exist := nkv.data[keys[0]]
-	if !exist {
-		return false
-	}
-	_, isString := n.(string)
-	if isString {
-		return len(keys) <= 1
-	}
-	return n.(NestedKeyValue).HasKey(keys[1:]...)
+	_, exist := nkv.GetKey(keys...)
+	return exist
 }
 
 func (nkv NestedKeyValue) LanguageHasKey(language string, keys ...string) bool {
@@ -283,25 +263,38 @@ func (nkv NestedKeyValue) LanguageHasKey(language string, keys ...string) bool {
 }
 
 func (nkv *NestedKeyValue) Set(path []string, value string) error {
-	s := stack.New()
+	if len(path) < 1 {
+		return errors.New("except at least on path")
+	}
+	var previous *NestedKeyValue
 	var current interface{} = nkv
+	lastID := len(path) - 1
 	for i, p := range path {
 		switch v := current.(type) {
-		case string:
-			if i == len(path)-1 {
-				s.Pop().(NestedKeyValue).data[p] = value
-			} else {
-				return fmt.Errorf("%v is not a map", path[:i+1])
+		case *NestedKeyValue:
+			n, exist := v.data[p]
+			if !exist {
+				if i != lastID {
+					n = &NestedKeyValue{
+						data: make(map[string]interface{}),
+					}
+					v.data[p] = n
+				}
 			}
+			previous = v
+			current = n
 			break
-		case NestedKeyValue:
-			if i == len(path)-1 {
-				return fmt.Errorf("%v is not a string", path[:i+1])
+		case string:
+			n := &NestedKeyValue{
+				data: map[string]interface{}{p: ""},
 			}
-			s.Push(v)
+			previous.data[path[i-1]] = n
+			previous = n
+			current = n.data[p]
 			break
 		}
 	}
+	previous.data[path[len(path)-1]] = value
 	return nil
 }
 
@@ -315,7 +308,7 @@ func NewReader(dir string) *Reader {
 		dir:                    dir,
 		outlineChan:            make(chan *Outline, 1),
 		partialTranslationChan: make(chan *PartialTranslation, 1),
-		errChan:                make(chan error, 1),
+		errChan:                make(chan error, 10),
 	}
 }
 
@@ -326,30 +319,47 @@ type Reader struct {
 	errChan                chan error
 }
 
+func (r Reader) GetOutlineSource() <-chan *Outline {
+	return r.outlineChan
+}
+
+func (r Reader) GetPartialTranslationSource() <-chan *PartialTranslation {
+	return r.partialTranslationChan
+}
+
+func (r Reader) GetErrorOut() <-chan error {
+	return r.errChan
+}
+
 func (r Reader) pushError(e error) {
 	go func() {
-		ticker := time.NewTicker(time.Second)
 		select {
-		case <-ticker.C:
-			return
 		case r.errChan <- e:
-			log.Println("an error drop by reader", e)
 			return
+		default:
+			log.Println("an error drop by reader", e)
 		}
 	}()
 }
 
 func (r Reader) Read() {
+	r.doRead(true)
+}
+
+func (r Reader) doRead(closeChannel bool) {
 	var mainWg sync.WaitGroup
 	mainWg.Add(1)
 	go func() {
 		o, err := parseOutline(filepath.Join(r.dir, "diplomat.yaml"))
 		if err != nil {
-			r.errChan <- err
+			r.pushError(err)
+			mainWg.Done()
 			return
 		}
 		r.outlineChan <- o
-		close(r.outlineChan)
+		if closeChannel {
+			close(r.outlineChan)
+		}
 		mainWg.Done()
 	}()
 	mainWg.Add(1)
@@ -358,6 +368,7 @@ func (r Reader) Read() {
 		paths, err := filepath.Glob(filepath.Join(r.dir, "**", "*.yaml"))
 		if err != nil {
 			r.pushError(err)
+			mainWg.Done()
 			return
 		}
 		for _, p := range paths {
@@ -376,15 +387,17 @@ func (r Reader) Read() {
 			}(p)
 		}
 		wg.Wait()
-		close(r.partialTranslationChan)
+		if closeChannel {
+			close(r.partialTranslationChan)
+		}
 		mainWg.Done()
 	}()
 
 	mainWg.Wait()
-
 }
 
 func (r Reader) Watch() {
+	r.doRead(false)
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		r.pushError(err)

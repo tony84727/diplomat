@@ -16,4 +16,4 @@ output:
     template:
       type: js
       options:
-        filename: "{{.Locale}}.{{.FragmentName}}.js"
+        filename: "control-panel.{{.Lang}}.js"

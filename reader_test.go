@@ -81,23 +81,23 @@ c:
 	assert.Equal(t, "element3", element3)
 }
 
-func TestYAMLOptionMarshal(t *testing.T) {
-	option := YAMLOption{
-		data: map[string]interface{}{
-			"key1": []interface{}{1, 2, 3},
-			"key2": map[string]interface{}{
-				"a": "av",
-				"b": "bv",
-			},
-		},
-	}
-	data, err := yaml.Marshal(option)
-	assert.NoError(t, err)
-	var o YAMLOption
-	err = yaml.Unmarshal(data, &o)
-	assert.NoError(t, err)
-	assert.Equal(t, option, o)
-}
+// func TestYAMLOptionMarshal(t *testing.T) {
+// 	option := YAMLOption{
+// 		data: map[string]interface{}{
+// 			"key1": []interface{}{1, 2, 3},
+// 			"key2": map[string]interface{}{
+// 				"a": "av",
+// 				"b": "bv",
+// 			},
+// 		},
+// 	}
+// 	data, err := yaml.Marshal(option)
+// 	assert.NoError(t, err)
+// 	var o YAMLOption
+// 	err = yaml.Unmarshal(data, &o)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, option, o)
+// }
 
 func TestUnmarshalNestedKeyValue(t *testing.T) {
 	data, err := ioutil.ReadFile("testdata/admin.yaml")

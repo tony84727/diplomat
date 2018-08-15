@@ -30,5 +30,7 @@ func TestChineseConvertorTransformHandler(t *testing.T) {
 	}
 	handler := transformer.getTransformerHandler()
 	out := handler(getSampleNKV())
-	assert.True(t, out.HasKey("admin", "zh-CN"))
+	cn, exist := out.GetKey("admin", "zh-CN")
+	assert.True(t, exist)
+	assert.Equal(t, "管理员", cn)
 }

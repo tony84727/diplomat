@@ -1,72 +1,73 @@
 package diplomat
 
-import (
-	"fmt"
-	"os"
-	"path/filepath"
-
-	"github.com/fsnotify/fsnotify"
-)
+import "log"
 
 type Diplomat struct {
-	outputPath        string
-	messengerHandlers map[string]MessengerHandler
+	outline      *Outline
+	translations map[string]*PartialTranslation
 }
 
-func (d Diplomat) dirForMessenger(messengerType string) (string, error) {
-	path := filepath.Join(d.outputPath, messengerType)
-	info, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			err := os.MkdirAll(path, 0755)
-			if err != nil {
-				return path, err
-			}
-			return path, nil
+func (d *Diplomat) SetOutline(o *Outline) {
+	d.outline = o
+}
+
+func (d *Diplomat) SetTranslations(translations map[string]*PartialTranslation) {
+	d.translations = translations
+}
+
+func (d *Diplomat) SetTranslation(translation *PartialTranslation) {
+	if d.translations == nil {
+		d.translations = make(map[string]*PartialTranslation)
+	}
+	d.translations[translation.path] = translation
+}
+
+func (d Diplomat) GetOutputSettings() []OutputConfig {
+	return d.outline.Output
+}
+
+func NewDiplomat(outline Outline, translations map[string]*PartialTranslation) *Diplomat {
+	d := &Diplomat{}
+	d.SetOutline(&outline)
+	d.SetTranslations(translations)
+	return d
+}
+
+func NewDiplomatAsync(outlineSource <-chan *Outline, transitionSource <-chan *PartialTranslation) *Diplomat {
+	d := &Diplomat{}
+	go func() {
+		for o := range outlineSource {
+			d.SetOutline(o)
 		}
-		return path, err
-	}
-	if !info.IsDir() {
-		return path, fmt.Errorf("output dir for [%s](%s) already exist, but is not a directory", messengerType, path)
-	}
-	return path, err
+	}()
+
+	go func() {
+		for t := range transitionSource {
+			d.SetTranslation(t)
+		}
+	}()
+	return d
 }
 
-func (d Diplomat) hasMessenger(messengerType string) (MessengerHandler, bool) {
-	m, exist := d.messengerHandlers[messengerType]
-	return m, exist
+func newReaderAndDiplomat(dir string) (*Reader, *Diplomat) {
+	r := NewReader(dir)
+	d := NewDiplomatAsync(r.GetOutlineSource(), r.GetPartialTranslationSource())
+	go func() {
+		for e := range r.GetErrorOut() {
+			log.Println("reader:", e)
+		}
+	}()
+	return r, d
 }
 
-type MessengerHandler func(fragmentName, locale, name string, content LocaleTranslations, path string)
-
-func (d *Diplomat) RegisterMessenger(name string, messenger MessengerHandler) {
-	d.messengerHandlers[name] = messenger
+func NewDiplomatForDirectory(dir string) *Diplomat {
+	r, d := newReaderAndDiplomat(dir)
+	r.Read()
+	return d
 }
 
-func NewDiplomatForDir(path string, outputPath string) (*Diplomat, error) {
-	dip := NewDiplomat(outputPath)
-	return &dip, nil
-}
-
-func NewDiplomatWatchFile(path string, outputPath string) (*Diplomat, error) {
-	d, err := NewDiplomatForFile(path, outputPath)
-	if err != nil {
-		return d, err
-	}
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return nil, err
-	}
-	watcher.Add(path)
-	d.watcherEvents = watcher.Events
-
-	return d, nil
-}
-
-func NewDiplomat(outputPath string) Diplomat {
-	d := Diplomat{
-		outputPath:        outputPath,
-		messengerHandlers: make(map[string]MessengerHandler, 1),
-	}
+func NewDiplomatWatchDirectory(dir string) *Diplomat {
+	r, d := newReaderAndDiplomat(dir)
+	r.Watch()
 	return d
 }
