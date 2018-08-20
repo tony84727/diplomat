@@ -1,7 +1,5 @@
 package diplomat
 
-import "log"
-
 type Diplomat struct {
 	outline      *Outline
 	translations map[string]*PartialTranslation
@@ -35,6 +33,7 @@ func NewDiplomat(outline Outline, translations map[string]*PartialTranslation) *
 
 func NewDiplomatAsync(outlineSource <-chan *Outline, transitionSource <-chan *PartialTranslation) *Diplomat {
 	d := &Diplomat{}
+	d.SetOutline(<-outlineSource)
 	go func() {
 		for o := range outlineSource {
 			d.SetOutline(o)
@@ -49,25 +48,16 @@ func NewDiplomatAsync(outlineSource <-chan *Outline, transitionSource <-chan *Pa
 	return d
 }
 
-func newReaderAndDiplomat(dir string) (*Reader, *Diplomat) {
-	r := NewReader(dir)
-	d := NewDiplomatAsync(r.GetOutlineSource(), r.GetPartialTranslationSource())
-	go func() {
-		for e := range r.GetErrorOut() {
-			log.Println("reader:", e)
-		}
-	}()
-	return r, d
-}
-
 func NewDiplomatForDirectory(dir string) *Diplomat {
-	r, d := newReaderAndDiplomat(dir)
+	r := NewReader(dir)
 	r.Read()
+	d := NewDiplomatAsync(r.GetOutlineSource(), r.GetPartialTranslationSource())
 	return d
 }
 
 func NewDiplomatWatchDirectory(dir string) *Diplomat {
-	r, d := newReaderAndDiplomat(dir)
-	r.Watch()
+	r := NewReader(dir)
+	r.Read()
+	d := NewDiplomatAsync(r.GetOutlineSource(), r.GetPartialTranslationSource())
 	return d
 }

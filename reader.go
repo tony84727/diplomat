@@ -435,12 +435,12 @@ func parseOutline(name string) (*Outline, error) {
 	if err != nil {
 		return nil, err
 	}
-	var outline *Outline
-	err = yaml.Unmarshal(data, outline)
+	var outline Outline
+	err = yaml.Unmarshal(data, &outline)
 	if err != nil {
 		return nil, err
 	}
-	return outline, nil
+	return &outline, nil
 }
 
 func parsePartialTranslation(path string) (*PartialTranslation, error) {
