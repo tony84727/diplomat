@@ -9,7 +9,7 @@ import (
 )
 
 func TestUnmarshalOutline(t *testing.T) {
-	outline := assertUnmarshalOutline(t, "testdata/outline.yaml")
+	outline := assertUnmarshalOutline(t, "testdata/diplomat.yaml")
 	assert.Len(t, outline.Preprocessors, 2)
 	assert.Len(t, outline.Output, 1)
 }
@@ -24,15 +24,15 @@ func assertUnmarshalOutline(t *testing.T, path string) Outline {
 }
 
 func TestUnmarshalOutput(t *testing.T) {
-	outline := assertUnmarshalOutline(t, "testdata/outline.yaml")
+	outline := assertUnmarshalOutline(t, "testdata/diplomat.yaml")
 	assert.Len(t, outline.Output[0].Selectors, 2)
 	filename, err := outline.Output[0].Template.Options.Get("filename")
 	assert.NoError(t, err)
-	assert.Equal(t, "{{.Locale}}.{{.FragmentName}}.js", filename)
+	assert.Equal(t, "control-panel.{{.Lang}}.js", filename)
 }
 
 func TestUnmarshalPreprocessorConfig(t *testing.T) {
-	outline := assertUnmarshalOutline(t, "testdata/outline.yaml")
+	outline := assertUnmarshalOutline(t, "testdata/diplomat.yaml")
 	assert.Equal(t, "chinese", outline.Preprocessors[0].Type)
 	mode, err := outline.Preprocessors[0].Options.Get(0, "mode")
 	assert.NoError(t, err)
