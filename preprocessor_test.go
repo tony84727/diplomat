@@ -22,15 +22,17 @@ to: zh-CN`
 	assert.Equal(t, "zh-CN", transformer.to)
 }
 
-func TestChineseConvertorTransformHandler(t *testing.T) {
+func TestChineseConvertorPreprocessorFunc(t *testing.T) {
 	transformer := ChineseTransformer{
 		from: "zh-TW",
 		to:   "zh-CN",
 		mode: TranditionalToSimplified,
 	}
-	handler := transformer.getTransformerHandler()
-	out := handler(getSampleNKV())
-	cn, exist := out.GetKey("admin", "zh-CN")
+	handler := transformer.getPreprocessorFunc()
+	nkv := getSampleNKV()
+	err := handler(&nkv)
+	assert.NoError(t, err)
+	cn, exist := nkv.GetKey("admin", "zh-CN")
 	assert.True(t, exist)
 	assert.Equal(t, "管理员", cn)
 }
