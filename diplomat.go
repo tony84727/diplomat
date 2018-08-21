@@ -28,7 +28,7 @@ func (d Diplomat) GetPreprocessors() ([]PreprocesserFunc, error) {
 	return preprocessorManagerInstance.buildPreprocessors(d.outline.Preprocessors)
 }
 
-// func (d Diplomat) getMergedNKV() *NestedKeyValue {
+// func (d Diplomat) getMergedYamlMap() *YAMLMap {
 // 	for _, n := range d.translations {
 // 	}
 // }

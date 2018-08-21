@@ -3,6 +3,7 @@ package diplomat
 import (
 	"html/template"
 	"log"
+	"os"
 )
 
 type TranslationPair struct {
@@ -69,4 +70,21 @@ type jsModuleMessenger struct {
 
 func (j jsModuleMessenger) GetFolder() string {
 	return "js"
+}
+
+type IBuildSpace interface {
+	Create(path string) os.File
+}
+
+type BuildSpace struct {
+	dir    string
+	logger log.Logger
+}
+
+func (b BuildSpace) ForMessenger(messengerType string) MessengerBuildSpace {
+	return MessengerBuildSpace{b}
+}
+
+type MessengerBuildSpace struct {
+	BuildSpace
 }

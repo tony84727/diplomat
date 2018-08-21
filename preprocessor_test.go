@@ -29,10 +29,10 @@ func TestChineseConvertorPreprocessorFunc(t *testing.T) {
 		mode: TranditionalToSimplified,
 	}
 	handler := transformer.getPreprocessorFunc()
-	nkv := getSampleNKV()
-	err := handler(&nkv)
+	yamlMap := getSampleYAMLMap()
+	err := handler(yamlMap)
 	assert.NoError(t, err)
-	cn, exist := nkv.GetKey("admin", "zh-CN")
+	cn, exist := yamlMap.GetKey("admin", "zh-CN")
 	assert.True(t, exist)
 	assert.Equal(t, "管理员", cn)
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/siongui/gojianfan"
 )
 
-type PreprocesserFunc func(nkv *NestedKeyValue) error
+type PreprocesserFunc func(yamlMap YAMLMap) error
 
 const (
 	SimplifiedToTranditonal = iota
@@ -52,8 +52,8 @@ func optionToChinesePreprocessorFunc(o YAMLOption) (PreprocesserFunc, error) {
 }
 
 func (c ChineseTransformer) getPreprocessorFunc() PreprocesserFunc {
-	return func(nkv *NestedKeyValue) error {
-		for _, keys := range nkv.GetKeys() {
+	return func(yamlMap YAMLMap) error {
+		for _, keys := range yamlMap.GetKeys() {
 			if keys[len(keys)-1] == c.from {
 				to := make([]string, len(keys))
 				lastID := len(to) - 1
@@ -61,9 +61,9 @@ func (c ChineseTransformer) getPreprocessorFunc() PreprocesserFunc {
 					to[i] = keys[i]
 				}
 				to[lastID] = c.to
-				value, exist := nkv.GetKey(keys...)
+				value, exist := yamlMap.GetKey(keys...)
 				if exist {
-					nkv.Set(to, c.transform(value.(string)))
+					yamlMap.Set(to, c.transform(value.(string)))
 				}
 			}
 		}
@@ -79,9 +79,9 @@ func (c ChineseTransformer) transform(in string) string {
 }
 
 func combinePreprocessor(preprocessors ...PreprocesserFunc) PreprocesserFunc {
-	return func(nkv *NestedKeyValue) error {
+	return func(yamlMap YAMLMap) error {
 		for _, v := range preprocessors {
-			err := v(nkv)
+			err := v(yamlMap)
 			if err != nil {
 				return err
 			}
