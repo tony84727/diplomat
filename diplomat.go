@@ -24,6 +24,19 @@ func (d Diplomat) GetOutputSettings() []OutputConfig {
 	return d.outline.Output
 }
 
+func (d Diplomat) GetPreprocessors() ([]PreprocesserFunc, error) {
+	return preprocessorManagerInstance.buildPreprocessors(d.outline.Preprocessors)
+}
+
+// func (d Diplomat) getMergedNKV() *NestedKeyValue {
+// 	for _, n := range d.translations {
+// 	}
+// }
+
+func (d Diplomat) Output() error {
+	return nil
+}
+
 func NewDiplomat(outline Outline, translations map[string]*PartialTranslation) *Diplomat {
 	d := &Diplomat{}
 	d.SetOutline(&outline)
