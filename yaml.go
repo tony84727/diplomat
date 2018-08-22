@@ -127,7 +127,10 @@ func (yamlMap YAMLMap) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err != nil {
 		return err
 	}
-	yamlMap = interfaceMapToYAMLMap(root)
+	data := interfaceMapToYAMLMap(root)
+	for k, v := range data {
+		yamlMap[k] = v
+	}
 	return nil
 }
 

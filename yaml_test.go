@@ -47,8 +47,8 @@ c:
 func TestUnmarshalYAMLMap(t *testing.T) {
 	data, err := ioutil.ReadFile("testdata/admin.yaml")
 	assert.NoError(t, err)
-	yamlMap := make(YAMLMap)
-	err = yaml.Unmarshal(data, yamlMap)
+	var yamlMap YAMLMap = make(YAMLMap)
+	err = yaml.Unmarshal(data, &yamlMap)
 	assert.NoError(t, err)
 	value, exist := yamlMap.GetKey("admin", "admin", "en")
 	assert.True(t, exist)
