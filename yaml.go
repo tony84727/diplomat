@@ -3,6 +3,8 @@ package diplomat
 import (
 	"errors"
 	"fmt"
+
+	set "github.com/deckarep/golang-set"
 )
 
 func interfaceMapToStringMap(in map[interface{}]interface{}) map[string]interface{} {
@@ -240,4 +242,17 @@ func (yamlMap YAMLMap) Set(path []string, value string) error {
 	}
 	previous[path[len(path)-1]] = value
 	return nil
+}
+
+func (yamlMap YAMLMap) GetLanguages() []string {
+	s := set.NewSet()
+	for _, k := range yamlMap.GetKeys() {
+		s.Add(k[len(k)-1])
+	}
+	list := s.ToSlice()
+	stringList := make([]string, len(list))
+	for i, language := range list {
+		stringList[i] = language.(string)
+	}
+	return stringList
 }

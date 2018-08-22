@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -115,7 +114,6 @@ func (g *generateCommand) SetFlags(f *flag.FlagSet) {
 
 func (g *generateCommand) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	d := diplomat.NewDiplomatForDirectory(g.folder)
-	fmt.Println(d.GetOutputSettings())
-
+	d.Output("out")
 	return subcommands.ExitSuccess
 }
