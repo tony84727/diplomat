@@ -30,9 +30,12 @@ func TestChineseConvertorPreprocessorFunc(t *testing.T) {
 	}
 	handler := transformer.getPreprocessorFunc()
 	yamlMap := getSampleYAMLMap()
+	originalKeyCount := len(yamlMap.GetKeys())
 	err := handler(yamlMap)
+	keyCount := len(yamlMap.GetKeys())
 	assert.NoError(t, err)
 	cn, exist := yamlMap.GetKey("admin", "zh-CN")
 	assert.True(t, exist)
 	assert.Equal(t, "管理员", cn)
+	assert.Equal(t, originalKeyCount+2, keyCount)
 }

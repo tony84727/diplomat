@@ -1,6 +1,7 @@
 package diplomat
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/siongui/gojianfan"
@@ -51,6 +52,33 @@ func optionToChinesePreprocessorFunc(o YAMLOption) (PreprocesserFunc, error) {
 	return transformer.getPreprocessorFunc(), nil
 }
 
+func chinesePreprocessorFactory(o YAMLOption) (PreprocesserFunc, error) {
+	isSlice, err := o.IsSlice()
+	if err != nil {
+		return nil, err
+	}
+	if !isSlice {
+		return nil, errors.New("expect array")
+	}
+	l, err := o.Len()
+	if err != nil {
+		return nil, err
+	}
+	funcs := make([]PreprocesserFunc, l)
+	options, err := o.Get()
+	if err != nil {
+		return nil, err
+	}
+	for i, op := range options.([]interface{}) {
+		f, err := optionToChinesePreprocessorFunc(YAMLOption{data: op})
+		if err != nil {
+			return nil, err
+		}
+		funcs[i] = f
+	}
+	return combinePreprocessor(funcs...), nil
+}
+
 func (c ChineseTransformer) getPreprocessorFunc() PreprocesserFunc {
 	return func(yamlMap YAMLMap) error {
 		for _, keys := range yamlMap.GetKeys() {
@@ -98,7 +126,7 @@ var preprocessorManagerInstance preprocessorManager
 
 func init() {
 	preprocessorManagerInstance = make(map[string]PreprocesserFuncFactory)
-	RegisterPreprocessorFuncFactory("chinese", optionToChinesePreprocessorFunc)
+	RegisterPreprocessorFuncFactory("chinese", chinesePreprocessorFactory)
 }
 
 func (pm preprocessorManager) buildPreprocessors(configs []PreprocessorConfig) ([]PreprocesserFunc, error) {

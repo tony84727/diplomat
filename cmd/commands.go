@@ -118,6 +118,10 @@ func (g *generateCommand) Execute(_ context.Context, f *flag.FlagSet, _ ...inter
 		log.Println("error:", err)
 		return subcommands.ExitFailure
 	}
-	d.Output("out")
+	err = d.Output("out")
+	if err != nil {
+		log.Println("error:", err)
+		return subcommands.ExitFailure
+	}
 	return subcommands.ExitSuccess
 }

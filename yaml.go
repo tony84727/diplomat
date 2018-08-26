@@ -45,6 +45,28 @@ type YAMLOption struct {
 	data interface{}
 }
 
+func (y YAMLOption) IsSlice(paths ...interface{}) (bool, error) {
+	child, err := y.Get(paths...)
+	if err != nil {
+		return false, err
+	}
+	_, ok := child.([]interface{})
+	return ok, nil
+}
+
+func (y YAMLOption) Len(paths ...interface{}) (int, error) {
+	child, err := y.Get(paths...)
+	if err != nil {
+		return 0, err
+	}
+	switch v := child.(type) {
+	case map[string]interface{}:
+	case []interface{}:
+		return len(v), nil
+	}
+	return 0, errors.New("the element is not a map nor a slice")
+}
+
 func (y YAMLOption) Get(paths ...interface{}) (interface{}, error) {
 	current := y.data
 	for i, p := range paths {

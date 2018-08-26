@@ -42,12 +42,12 @@ func (d Diplomat) Output(outDir string) error {
 	all := d.getMergedYamlMap()
 	ps, err := d.GetPreprocessors()
 	if err != nil {
-		return err
+		return fmt.Errorf("building preprocessers: %s", err)
 	}
 	p := combinePreprocessor(ps...)
 	err = p(all)
 	if err != nil {
-		return err
+		return fmt.Errorf("preprocessor: %s", err)
 	}
 	for _, oc := range d.outline.Output {
 		prefixSelectors := make([]Selector, len(oc.Selectors))
@@ -56,7 +56,19 @@ func (d Diplomat) Output(outDir string) error {
 		}
 		selector := NewCombinedSelector(prefixSelectors...)
 		selected := all.FilterBySelector(selector)
-		fmt.Println(selected)
+		keys := selected.GetKeys()
+		m := make(map[string][][]string)
+		for _, k := range keys {
+			last := k[len(k)-1]
+			_, exist := m[last]
+			if !exist {
+				m[last] = make([][]string, 0, 1)
+			}
+			m[last] = append(m[last], k)
+		}
+		for language, keys := range m {
+			fmt.Printf("language: %s\n%v\n", language, keys)
+		}
 	}
 	return nil
 }
