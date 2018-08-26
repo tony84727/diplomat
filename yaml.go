@@ -217,30 +217,23 @@ func (yamlMap YAMLMap) Set(path []string, value string) error {
 	if len(path) < 1 {
 		return errors.New("except at least on path")
 	}
-	var previous YAMLMap
-	var current interface{} = yamlMap
-	lastID := len(path) - 1
-	for i, p := range path {
-		switch v := current.(type) {
-		case YAMLMap:
-			n, exist := v[p]
-			if !exist {
-				if i != lastID {
-					v[p] = make(map[string]interface{})
-				}
+	current := yamlMap
+	for i := 0; i < len(path); i++ {
+		p := path[i]
+		next, exist := current[p]
+		if exist {
+			if m, isMap := next.(YAMLMap); isMap {
+				current = m
+				continue
 			}
-			previous = v
-			current = n
-			break
-		case string:
-			n := map[string]interface{}{p: ""}
-			previous[path[i-1]] = n
-			previous = n
-			current = n[p]
-			break
 		}
+		current[p] = make(YAMLMap)
+		if i == len(path)-1 {
+			current[p] = value
+			continue
+		}
+		current = current[p].(YAMLMap)
 	}
-	previous[path[len(path)-1]] = value
 	return nil
 }
 
@@ -255,4 +248,15 @@ func (yamlMap YAMLMap) GetLanguages() []string {
 		stringList[i] = language.(string)
 	}
 	return stringList
+}
+
+func MergeYAMLMaps(maps ...YAMLMap) YAMLMap {
+	all := make(YAMLMap)
+	for _, s := range maps {
+		for _, k := range s.GetKeys() {
+			v, _ := s.GetKey(k...)
+			all.Set(k, v.(string))
+		}
+	}
+	return all
 }

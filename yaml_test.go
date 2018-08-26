@@ -100,3 +100,37 @@ func TestHasKey(t *testing.T) {
 	assert.True(t, yamlMap.HasKey("message", "hello", "zh-TW"))
 	assert.False(t, yamlMap.HasKey("hello", "admin"))
 }
+
+func TestYAMLMapSet(t *testing.T) {
+	yamlMap := make(YAMLMap)
+	yamlMap.Set([]string{"parent", "child"}, "value")
+	assert.ElementsMatch(
+		t,
+		[][]string{
+			[]string{
+				"parent",
+				"child",
+			},
+		},
+		yamlMap.GetKeys(),
+	)
+	v, exist := yamlMap.GetKey("parent", "child")
+	assert.True(t, exist)
+	assert.Equal(t, "value", v)
+}
+
+func TestMergeYAMLMaps(t *testing.T) {
+	a := make(YAMLMap)
+	a.Set([]string{"admin", "en"}, "Admin")
+	b := make(YAMLMap)
+	b.Set([]string{"test", "en"}, "test")
+	all := MergeYAMLMaps(a, b)
+	assert.ElementsMatch(
+		t,
+		[][]string{
+			[]string{"admin", "en"},
+			[]string{"test", "en"},
+		},
+		all.GetKeys(),
+	)
+}

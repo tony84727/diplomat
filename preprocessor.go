@@ -94,7 +94,12 @@ type PreprocesserFuncFactory func(YAMLOption) (PreprocesserFunc, error)
 
 type preprocessorManager map[string]PreprocesserFuncFactory
 
-var preprocessorManagerInstance preprocessorManager = make(map[string]PreprocesserFuncFactory)
+var preprocessorManagerInstance preprocessorManager
+
+func init() {
+	preprocessorManagerInstance = make(map[string]PreprocesserFuncFactory)
+	RegisterPreprocessorFuncFactory("chinese", optionToChinesePreprocessorFunc)
+}
 
 func (pm preprocessorManager) buildPreprocessors(configs []PreprocessorConfig) ([]PreprocesserFunc, error) {
 	preprocessors := make([]PreprocesserFunc, 0, len(configs))

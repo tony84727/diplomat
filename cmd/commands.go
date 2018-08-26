@@ -113,7 +113,11 @@ func (g *generateCommand) SetFlags(f *flag.FlagSet) {
 }
 
 func (g *generateCommand) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	d := diplomat.NewDiplomatForDirectory(g.folder)
+	d, err := diplomat.NewDiplomatForDirectory(g.folder)
+	if err != nil {
+		log.Println("error:", err)
+		return subcommands.ExitFailure
+	}
 	d.Output("out")
 	return subcommands.ExitSuccess
 }

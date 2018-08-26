@@ -75,7 +75,7 @@ func (r Reader) pushError(e error) {
 }
 
 func (r Reader) Read() (*Outline, []*PartialTranslation, error) {
-	outlineChan, translationChan, errorChan := r.doRead()
+	outlineChan, translationChan, errorChan := r.doRead(true)
 	var wg sync.WaitGroup
 	wg.Add(2)
 	var outline *Outline
@@ -97,13 +97,12 @@ func (r Reader) Read() (*Outline, []*PartialTranslation, error) {
 	}()
 	for {
 		select {
-		case done:
-			break
+		case <-done:
+			return outline, translations, nil
 		case err := <-errorChan:
 			return nil, nil, err
 		}
 	}
-	return outline, translations, nil
 }
 
 type asyncErrorSink struct {

@@ -31,14 +31,11 @@ func (d Diplomat) GetPreprocessors() ([]PreprocesserFunc, error) {
 }
 
 func (d Diplomat) getMergedYamlMap() YAMLMap {
-	all := make(YAMLMap)
-	for _, n := range d.translations {
-		for _, k := range n.data.GetKeys() {
-			v, _ := n.data.GetKey(k...)
-			all.Set(k, v.(string))
-		}
+	maps := make([]YAMLMap, len(d.translations))
+	for _, p := range d.translations {
+		maps = append(maps, p.data)
 	}
-	return all
+	return MergeYAMLMaps(maps...)
 }
 
 func (d Diplomat) Output(outDir string) error {
@@ -48,7 +45,10 @@ func (d Diplomat) Output(outDir string) error {
 		return err
 	}
 	p := combinePreprocessor(ps...)
-	p(all)
+	err = p(all)
+	if err != nil {
+		return err
+	}
 	for _, oc := range d.outline.Output {
 		prefixSelectors := make([]Selector, len(oc.Selectors))
 		for i, prefix := range oc.Selectors {
@@ -85,16 +85,25 @@ func NewDiplomatAsync(outlineSource <-chan *Outline, translationSource <-chan *P
 	return d
 }
 
-func NewDiplomatForDirectory(dir string) *Diplomat {
+func NewDiplomatForDirectory(dir string) (*Diplomat, error) {
 	r := NewReader(dir)
 	go func() {
 		for e := range r.GetErrorOut() {
 			fmt.Println("[error] ", e)
 		}
 	}()
-	r.Read()
-	d := NewDiplomatAsync(r.GetOutlineSource(), r.GetPartialTranslationSource())
-	return d
+	outline, translations, err := r.Read()
+	if err != nil {
+		return nil, err
+	}
+	d := &Diplomat{}
+	d.SetOutline(outline)
+	translationMap := make(map[string]*PartialTranslation, len(translations))
+	for _, t := range translations {
+		translationMap[t.path] = t
+	}
+	d.SetTranslations(translationMap)
+	return d, nil
 }
 
 func NewDiplomatWatchDirectory(dir string) *Diplomat {
