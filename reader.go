@@ -20,7 +20,7 @@ type PreprocessorConfig struct {
 
 type OutputConfig struct {
 	Selectors []string
-	Template  MessengerConfig
+	Templates []MessengerConfig
 }
 
 // Outline is the struct of translation file.

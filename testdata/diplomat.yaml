@@ -13,7 +13,7 @@ output:
   - selectors:
       - admin
       - manage
-    template:
-      type: js
-      options:
-        filename: "control-panel.{{.Lang}}.js"
+    templates:
+      - type: js
+        options:
+          filename: "control-panel.{{.Lang}}.js"

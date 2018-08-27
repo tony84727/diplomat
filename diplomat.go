@@ -57,17 +57,23 @@ func (d Diplomat) Output(outDir string) error {
 		selector := NewCombinedSelector(prefixSelectors...)
 		selected := all.FilterBySelector(selector)
 		keys := selected.GetKeys()
-		m := make(map[string][][]string)
+		m := make(map[string]YAMLMap)
 		for _, k := range keys {
 			last := k[len(k)-1]
 			_, exist := m[last]
 			if !exist {
-				m[last] = make([][]string, 0, 1)
+				m[last] = make(YAMLMap)
 			}
-			m[last] = append(m[last], k)
+			v, _ := selected.GetKey(k...)
+			m[last].Set(k, v.(string))
 		}
-		for language, keys := range m {
-			fmt.Printf("language: %s\n%v\n", language, keys)
+		bs := newBuildSpace(outDir)
+		for _, t := range oc.Templates {
+			mf, exist := messengerRegistryInstance[t.Type]
+			if exist {
+				mbs := bs.ForMessenger(t.Type)
+				mf(m, t.Options, mbs)
+			}
 		}
 	}
 	return nil
