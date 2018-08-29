@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 type IBuildSpace interface {
@@ -16,6 +17,7 @@ type BuildSpace struct {
 	dir    string
 	logger *log.Logger
 	prefix string
+	wg     sync.WaitGroup
 }
 
 func newBuildSpace(dir string) BuildSpace {
@@ -62,9 +64,18 @@ func (sw *spyWriteCloser) Write(p []byte) (n int, err error) {
 
 func (sw *spyWriteCloser) Close() error {
 	err := sw.target.Close()
-	for _, listener := range sw.listeners {
-		go listener(sw.sum)
+	if err != nil {
+		return err
 	}
+	var wg sync.WaitGroup
+	for _, listener := range sw.listeners {
+		wg.Add(1)
+		go func(f func(int)) {
+			f(sw.sum)
+			wg.Done()
+		}(listener)
+	}
+	wg.Wait()
 	return err
 }
 
@@ -82,15 +93,26 @@ func (b BuildSpace) onWriteFileDone(path string, size int) {
 }
 
 func (b BuildSpace) Create(path string) (io.WriteCloser, error) {
-	f, err := os.Create(filepath.Join(b.dir, path))
+	path = filepath.Join(b.dir, path)
+	err := os.MkdirAll(filepath.Dir(path), 0755)
 	if err != nil {
 		return nil, err
 	}
+	f, err := os.Create(path)
+	if err != nil {
+		return nil, err
+	}
+	b.wg.Add(1)
 	spy := newspyWriteCloser(f)
 	spy.addCloseListener(func(size int) {
 		b.onWriteFileDone(path, size)
+		b.wg.Done()
 	})
 	return spy, nil
+}
+
+func (b BuildSpace) Done() {
+	b.wg.Wait()
 }
 
 func (b *BuildSpace) setPrefix(prefix string) {

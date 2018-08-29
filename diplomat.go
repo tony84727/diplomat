@@ -1,6 +1,8 @@
 package diplomat
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Diplomat struct {
 	outline      *Outline
@@ -67,14 +69,39 @@ func (d Diplomat) Output(outDir string) error {
 			v, _ := selected.GetKey(k...)
 			m[last].Set(k, v.(string))
 		}
-		bs := newBuildSpace(outDir)
-		for _, t := range oc.Templates {
-			mf, exist := messengerRegistryInstance[t.Type]
-			if exist {
-				mbs := bs.ForMessenger(t.Type)
-				mf(m, t.Options, mbs)
-			}
+		err := d.runMessengers(oc, m, outDir)
+		if err != nil {
+			return err
 		}
+	}
+	return nil
+}
+
+func (d Diplomat) runMessengers(oc OutputConfig, languages map[string]YAMLMap, outDir string) error {
+	bs := newBuildSpace(outDir)
+	errChan := make(chan *messengerError)
+	running := 0
+	for _, t := range oc.Templates {
+		mf, exist := messengerRegistryInstance[t.Type]
+		if exist {
+			running++
+			mbs := bs.ForMessenger(t.Type)
+			go func(f MessengerFunc, messengerType string, option YAMLOption, b IBuildSpace) {
+				err := f(languages, option, b)
+				if err != nil {
+					errChan <- newMessengerError(messengerType, err)
+				} else {
+					errChan <- nil
+				}
+			}(mf, t.Type, t.Options, mbs)
+		}
+	}
+	for running > 0 {
+		e := <-errChan
+		if e != nil {
+			return e
+		}
+		running--
 	}
 	return nil
 }
@@ -105,11 +132,6 @@ func NewDiplomatAsync(outlineSource <-chan *Outline, translationSource <-chan *P
 
 func NewDiplomatForDirectory(dir string) (*Diplomat, error) {
 	r := NewReader(dir)
-	go func() {
-		for e := range r.GetErrorOut() {
-			fmt.Println("[error] ", e)
-		}
-	}()
 	outline, translations, err := r.Read()
 	if err != nil {
 		return nil, err

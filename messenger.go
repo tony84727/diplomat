@@ -108,3 +108,19 @@ func javascriptMessengerFunc(languages map[string]YAMLMap, options YAMLOption, b
 	}
 	return nil
 }
+
+type messengerError struct {
+	messengerType string
+	error
+}
+
+func (e messengerError) Error() string {
+	return fmt.Sprintf("messenger_type: %s, %s", e.messengerType, e.error.Error())
+}
+
+func newMessengerError(messengerType string, err error) *messengerError {
+	return &messengerError{
+		messengerType,
+		err,
+	}
+}
