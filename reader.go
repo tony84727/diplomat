@@ -37,41 +37,12 @@ type PartialTranslation struct {
 
 func NewReader(dir string) *Reader {
 	return &Reader{
-		dir:                    dir,
-		outlineChan:            make(chan *Outline),
-		partialTranslationChan: make(chan *PartialTranslation),
-		errChan:                make(chan error, 10),
+		dir: dir,
 	}
 }
 
 type Reader struct {
-	dir                    string
-	outlineChan            chan *Outline
-	partialTranslationChan chan *PartialTranslation
-	errChan                chan error
-}
-
-func (r Reader) GetOutlineSource() <-chan *Outline {
-	return r.outlineChan
-}
-
-func (r Reader) GetPartialTranslationSource() <-chan *PartialTranslation {
-	return r.partialTranslationChan
-}
-
-func (r Reader) GetErrorOut() <-chan error {
-	return r.errChan
-}
-
-func (r Reader) pushError(e error) {
-	go func() {
-		select {
-		case r.errChan <- e:
-			return
-		default:
-			log.Println("an error drop by reader", e)
-		}
-	}()
+	dir string
 }
 
 func (r Reader) Read() (*Outline, []*PartialTranslation, error) {
@@ -156,7 +127,7 @@ func (r Reader) doRead(closeChannels bool) (<-chan *Outline, <-chan *PartialTran
 			go func(path string) {
 				t, err := parsePartialTranslation(path)
 				if err != nil {
-					r.pushError(err)
+					errorSink.push(err)
 					return
 				}
 				translationChan <- t
@@ -171,11 +142,17 @@ func (r Reader) doRead(closeChannels bool) (<-chan *Outline, <-chan *PartialTran
 	return outlineChan, translationChan, errorSink.errorChan
 }
 
-func (r Reader) Watch() {
-	r.Read()
+func (r Reader) Watch() (<-chan *Outline, <-chan *PartialTranslation, <-chan error) {
+	outlineChan := make(chan *Outline)
+	partialTranslationChan := make(chan *PartialTranslation)
+	errorSink := newAsyncErrorSink()
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		r.pushError(err)
+		errorSink.push(err)
+		close(outlineChan)
+		close(partialTranslationChan)
+		return outlineChan, partialTranslationChan, errorSink.errorChan
 	}
 	watcher.Add(r.dir)
 	for e := range nameBaseThrottler(watcher.Events) {
@@ -183,22 +160,23 @@ func (r Reader) Watch() {
 			go func(path string) {
 				o, err := parseOutline(path)
 				if err != nil {
-					r.pushError(err)
+					errorSink.push(err)
 					return
 				}
-				r.outlineChan <- o
+				outlineChan <- o
 			}(e.Name)
 		} else {
 			go func(path string) {
 				t, err := parsePartialTranslation(path)
 				if err != nil {
-					r.pushError(err)
+					errorSink.push(err)
 					return
 				}
-				r.partialTranslationChan <- t
+				partialTranslationChan <- t
 			}(e.Name)
 		}
 	}
+	return outlineChan, partialTranslationChan, errorSink.errorChan
 }
 
 func isOutlineFile(name string) bool {

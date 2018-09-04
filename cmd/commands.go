@@ -111,6 +111,9 @@ func (g *generateCommand) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&g.outdir, "out", "out", "output dir")
 	f.BoolVar(&g.watch, "watch", false, "watch file changes")
 }
+func (g *generateCommand) watch(c context.Context, f *flag.FlagSet, _ ...interface{}) {
+
+}
 
 func (g *generateCommand) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	d, err := diplomat.NewDiplomatForDirectory(g.folder)
