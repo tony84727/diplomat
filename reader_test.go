@@ -26,7 +26,7 @@ func assertUnmarshalOutline(t *testing.T, path string) Outline {
 func TestUnmarshalOutput(t *testing.T) {
 	outline := assertUnmarshalOutline(t, "testdata/diplomat.yaml")
 	assert.Len(t, outline.Output[0].Selectors, 2)
-	filename, err := outline.Output[0].Template.Options.Get("filename")
+	filename, err := outline.Output[0].Templates[0].Options.Get("filename")
 	assert.NoError(t, err)
 	assert.Equal(t, "control-panel.{{.Lang}}.js", filename)
 }

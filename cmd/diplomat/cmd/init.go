@@ -8,26 +8,20 @@ import (
 )
 
 const exampleOutlineFile = `version: '1'
-settings:
-  chinese:
-    convert:
-      mode: t2s
+preprocessors:
+- type: chinese
+  options:
+    - mode: t2s
       from: zh-TW
       to: zh-CN
-  copy:
-  - from: en
-    to: fr
-fragments:
-  admin:
-    description: translations for admin page
-    translations:
-      admin:
-        zh-TW: 管理員
-        en: Admin
 output:
-  fragments:
-  - type: js
-    name: "{{.Locale}}.{{.FragmentName}}.js"`
+  - selectors:
+      - admin
+      - manage
+    templates:
+      - type: js
+        options:
+          filename: "{{.Lang}}.locale.js"`
 
 var (
 	outline string

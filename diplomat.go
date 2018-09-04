@@ -146,14 +146,34 @@ func NewDiplomatForDirectory(dir string) (*Diplomat, error) {
 	return d, nil
 }
 
-func NewDiplomatWatchDirectory(dir string) *Diplomat {
+func NewDiplomatWatchDirectory(dir string) (d *Diplomat, errorChan <-chan error, changeListener <-chan bool) {
 	r := NewReader(dir)
+	outlineChan, translationChan, ec := r.Watch()
+	proxiedOutlineChan := make(chan *Outline)
+	proxiedTranslationChan := make(chan *PartialTranslation)
+	c := make(chan bool)
 	go func() {
-		for e := range r.GetErrorOut() {
-			fmt.Println("[error] ", e)
+		for o := range outlineChan {
+			select {
+			case c <- true:
+			default:
+			}
+			proxiedOutlineChan <- o
 		}
 	}()
-	r.Read()
-	d := NewDiplomatAsync(r.GetOutlineSource(), r.GetPartialTranslationSource())
-	return d
+
+	go func() {
+		for t := range translationChan {
+			select {
+			case c <- true:
+			default:
+			}
+			proxiedTranslationChan <- t
+		}
+	}()
+
+	d = NewDiplomatAsync(proxiedOutlineChan, proxiedTranslationChan)
+	changeListener = c
+	errorChan = ec
+	return
 }
