@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
 
 	"github.com/MinecraftXwinP/diplomat"
@@ -106,17 +107,34 @@ func (g *generateCommand) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&g.outdir, "out", "out", "output dir")
 	f.BoolVar(&g.watch, "watch", false, "watch file changes")
 }
-func (g *generateCommand) watch(c context.Context, f *flag.FlagSet, _ ...interface{}) {
-
+func (g *generateCommand) doWatch(c context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+	d, errChan, changeListener := diplomat.NewDiplomatWatchDirectory(g.folder)
+	go func() {
+		for e := range errChan {
+			log.Println("error:", e)
+		}
+	}()
+	go func() {
+		for range changeListener {
+			d.Output(g.outdir)
+		}
+	}()
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	return subcommands.ExitSuccess
 }
 
-func (g *generateCommand) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (g *generateCommand) Execute(c context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+	if g.watch {
+		return g.doWatch(c, f)
+	}
 	d, err := diplomat.NewDiplomatForDirectory(g.folder)
 	if err != nil {
 		log.Println("error:", err)
 		return subcommands.ExitFailure
 	}
-	err = d.Output("out")
+	err = d.Output(g.outdir)
 	if err != nil {
 		log.Println("error:", err)
 		return subcommands.ExitFailure
