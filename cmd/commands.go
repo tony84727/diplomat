@@ -30,27 +30,22 @@ func (c *createCommand) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&c.out, "out", "outline.yaml", "filepath of generated outline file")
 }
 
-const exampleOutlineFile = `version: '1'
-settings:
-  chinese:
-    convert:
-      mode: t2s
+const exampleOutlineFile = `version: "1"
+preprocessors:
+- type: chinese
+  options:
+    - mode: t2s
       from: zh-TW
       to: zh-CN
-  copy:
-  - from: en
-    to: fr
-fragments:
-  admin:
-    description: translations for admin page
-    translations:
-      admin:
-        zh-TW: 管理員
-        en: Admin
 output:
-  fragments:
-  - type: js
-    name: "{{.Locale}}.{{.FragmentName}}.js"`
+  - selectors:
+      - admin
+      - manage
+    templates:
+      - type: js
+        options:
+          filename: "{{.Lang}}.locale.js"
+`
 
 func (c *createCommand) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	wd, err := os.Getwd()

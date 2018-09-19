@@ -1,6 +1,7 @@
 package diplomat
 
 import (
+	"fmt"
 	"io/ioutil"
 	"testing"
 
@@ -42,6 +43,23 @@ c:
 	element3, err := o.Get("c", 2)
 	assert.NoError(t, err)
 	assert.Equal(t, "element3", element3)
+}
+
+func ExampleMarshalYAMLOption() {
+	data := map[string]interface{}{
+		"a": "av",
+		"b": "bv",
+		"c": []string{"element1", "element2", "element3"},
+	}
+	out, _ := yaml.Marshal(YAMLOption{data})
+	fmt.Print(string(out))
+	// Output:
+	// a: av
+	// b: bv
+	// c:
+	// - element1
+	// - element2
+	// - element3
 }
 
 func TestUnmarshalYAMLMap(t *testing.T) {

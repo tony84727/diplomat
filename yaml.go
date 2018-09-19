@@ -108,6 +108,11 @@ func (y *YAMLOption) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	return nil
 }
+
+func (y YAMLOption) MarshalYAML() (interface{}, error) {
+	return y.data, nil
+}
+
 func interfaceMapToYAMLMap(in map[interface{}]interface{}) YAMLMap {
 	out := make(YAMLMap, len(in))
 	for k, i := range in {
