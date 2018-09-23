@@ -20,33 +20,20 @@ func throttle(interval time.Duration, events <-chan fsnotify.Event) <-chan fsnot
 	go func() {
 		var lastEvent *fsnotify.Event
 		var ticker *time.Ticker
-		tickChan := make(chan time.Time)
 		for {
-			select {
-			case e, ok := <-events:
-				if !ok {
-					events = nil
-				}
-				lastEvent = &e
-				if ticker != nil {
-					ticker.Stop()
-				}
+			if ticker == nil {
 				ticker = time.NewTicker(interval)
-				go func() {
-					for t := range ticker.C {
-						tickChan <- t
-					}
-				}()
-				break
-			case <-tickChan:
-				ticker.Stop()
-				ticker = nil
+			}
+			select {
+			case <-ticker.C:
 				if lastEvent != nil {
 					c <- *lastEvent
+					lastEvent = nil
 				}
-			}
-			if events == nil {
 				break
+			case e := <-events:
+				lastEvent = &e
+				ticker = nil
 			}
 		}
 	}()
