@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -142,20 +141,11 @@ func (r Reader) doRead(closeChannels bool) (<-chan *Outline, <-chan *PartialTran
 	return outlineChan, translationChan, errorSink.errorChan
 }
 
-func (r Reader) Watch() (<-chan *Outline, <-chan *PartialTranslation, <-chan error) {
+func doWatch(events <-chan fsnotify.Event) (<-chan *Outline, <-chan *PartialTranslation, <-chan error) {
 	outlineChan := make(chan *Outline)
 	partialTranslationChan := make(chan *PartialTranslation)
 	errorSink := newAsyncErrorSink()
-
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		errorSink.push(err)
-		close(outlineChan)
-		close(partialTranslationChan)
-		return outlineChan, partialTranslationChan, errorSink.errorChan
-	}
-	watcher.Add(r.dir)
-	for e := range throttle(200*time.Millisecond, watcher.Events) {
+	for e := range events {
 		if isOutlineFile(e.Name) {
 			go func(path string) {
 				o, err := parseOutline(path)
@@ -177,6 +167,17 @@ func (r Reader) Watch() (<-chan *Outline, <-chan *PartialTranslation, <-chan err
 		}
 	}
 	return outlineChan, partialTranslationChan, errorSink.errorChan
+}
+
+func (r Reader) Watch() (<-chan *Outline, <-chan *PartialTranslation, <-chan error) {
+	errorSink := newAsyncErrorSink()
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		errorSink.push(err)
+		return nil, nil, errorSink.errorChan
+	}
+	watcher.Add(r.dir)
+	return doWatch(watcher.Events)
 }
 
 func isOutlineFile(name string) bool {
