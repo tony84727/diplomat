@@ -108,17 +108,13 @@ func (g *generateCommand) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&g.watch, "watch", false, "watch file changes")
 }
 func (g *generateCommand) doWatch(c context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	d, errChan, changeListener := diplomat.NewDiplomatWatchDirectory(g.folder)
+	d, errChan := diplomat.NewDiplomatWatchDirectory(g.folder)
 	go func() {
 		for e := range errChan {
 			log.Println("error:", e)
 		}
 	}()
-	go func() {
-		for range changeListener {
-			d.Output(g.outdir)
-		}
-	}()
+	go d.Watch(g.outdir)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit

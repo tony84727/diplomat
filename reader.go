@@ -155,7 +155,7 @@ func (r Reader) Watch() (<-chan *Outline, <-chan *PartialTranslation, <-chan err
 		return outlineChan, partialTranslationChan, errorSink.errorChan
 	}
 	watcher.Add(r.dir)
-	for e := range nameBaseThrottler(watcher.Events) {
+	for e := range throttle(200*time.Millisecond, watcher.Events) {
 		if isOutlineFile(e.Name) {
 			go func(path string) {
 				o, err := parseOutline(path)
@@ -210,45 +210,4 @@ func parsePartialTranslation(path string) (*PartialTranslation, error) {
 		path: path,
 		data: t,
 	}, nil
-}
-
-type watchThrottler struct {
-	source     <-chan fsnotify.Event
-	out        chan<- fsnotify.Event
-	throttlers map[string]chan<- fsnotify.Event
-}
-
-func (wt watchThrottler) loop() {
-	for e := range wt.source {
-		c, exist := wt.throttlers[e.Name]
-		if !exist {
-			nc := make(chan fsnotify.Event, 1)
-			go func() {
-				for e := range throttle(time.Second, nc) {
-					wt.out <- e
-				}
-			}()
-			wt.throttlers[e.Name] = nc
-			c = nc
-		}
-		c <- e
-	}
-}
-
-func (wt watchThrottler) close() {
-	for _, c := range wt.throttlers {
-		close(c)
-	}
-	close(wt.out)
-}
-
-func nameBaseThrottler(source <-chan fsnotify.Event) <-chan fsnotify.Event {
-	c := make(chan fsnotify.Event, 1)
-	w := watchThrottler{
-		source,
-		c,
-		make(map[string]chan<- fsnotify.Event),
-	}
-	go w.loop()
-	return c
 }

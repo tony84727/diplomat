@@ -49,3 +49,21 @@ func TestThrottle(t *testing.T) {
 	}
 	assert.Equal(t, "second", e.Name)
 }
+
+func TestFanoutHub(t *testing.T) {
+	hub := newFanoutHub()
+	l := make(chan interface{})
+	go hub.run()
+	hub.addListener(l)
+	hub.broadcast("hello")
+	ticker := time.NewTicker(time.Second)
+	select {
+	case message := <-l:
+		assert.Equal(t, "hello", message)
+		break
+	case <-ticker.C:
+		t.Log("timed out. should receive message 'hello'.")
+		t.Fail()
+	}
+
+}
