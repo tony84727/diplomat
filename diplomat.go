@@ -5,23 +5,19 @@ import (
 )
 
 type Diplomat struct {
-	outline      *Outline
-	translations map[string]*PartialTranslation
+	outline         *Outline
+	translations    map[string]*PartialTranslation
+	outlineChan     chan *Outline
+	translationChan chan *PartialTranslation
+	changeListeners *fanoutHub
 }
 
 func (d *Diplomat) SetOutline(o *Outline) {
-	d.outline = o
-}
-
-func (d *Diplomat) SetTranslations(translations map[string]*PartialTranslation) {
-	d.translations = translations
+	d.outlineChan <- o
 }
 
 func (d *Diplomat) SetTranslation(translation *PartialTranslation) {
-	if d.translations == nil {
-		d.translations = make(map[string]*PartialTranslation)
-	}
-	d.translations[translation.path] = translation
+	d.translationChan <- translation
 }
 
 func (d Diplomat) GetOutputSettings() []OutputConfig {
@@ -38,6 +34,20 @@ func (d Diplomat) getMergedYamlMap() YAMLMap {
 		maps = append(maps, p.data)
 	}
 	return MergeYAMLMaps(maps...)
+}
+
+func (d Diplomat) Watch(outDir string) error {
+	l := make(chan interface{})
+	d.changeListeners.addListener(l)
+	for range l {
+		if d.outline != nil {
+			err := d.Output(outDir)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (d Diplomat) Output(outDir string) error {
@@ -106,16 +116,55 @@ func (d Diplomat) runMessengers(oc OutputConfig, languages map[string]YAMLMap, o
 	return nil
 }
 
-func NewDiplomat(outline Outline, translations map[string]*PartialTranslation) *Diplomat {
-	d := &Diplomat{}
-	d.SetOutline(&outline)
-	d.SetTranslations(translations)
+func (d *Diplomat) startMaintenanceLoops() {
+	go d.maintainOutline()
+	go d.maintainTranslations()
+}
+
+func (d *Diplomat) maintainTranslations() {
+	for t := range d.translationChan {
+		d.translations[t.path] = t
+		d.changeListeners.broadcast(true)
+	}
+}
+
+func (d *Diplomat) maintainOutline() {
+	for o := range d.outlineChan {
+		d.outline = o
+		d.changeListeners.broadcast(true)
+	}
+}
+
+func New() *Diplomat {
+	listeners := newFanoutHub()
+	go listeners.run()
+	// debug := make(chan interface{})
+	// listeners.addListener(debug)
+	// for e := range debug {
+	// 	log.Println(e)
+	// }
+	d := &Diplomat{
+		changeListeners: listeners,
+		outlineChan:     make(chan *Outline, 10),
+		translationChan: make(chan *PartialTranslation, 10),
+		translations:    make(map[string]*PartialTranslation),
+		outline:         nil,
+	}
+	d.startMaintenanceLoops()
+	return d
+}
+
+func NewByValue(outline *Outline, translations []*PartialTranslation) *Diplomat {
+	d := New()
+	d.SetOutline(outline)
+	for _, t := range translations {
+		d.SetTranslation(t)
+	}
 	return d
 }
 
 func NewDiplomatAsync(outlineSource <-chan *Outline, translationSource <-chan *PartialTranslation) *Diplomat {
-	d := &Diplomat{}
-	d.SetOutline(<-outlineSource)
+	d := New()
 	go func() {
 		for o := range outlineSource {
 			d.SetOutline(o)
@@ -131,49 +180,28 @@ func NewDiplomatAsync(outlineSource <-chan *Outline, translationSource <-chan *P
 }
 
 func NewDiplomatForDirectory(dir string) (*Diplomat, error) {
-	r := NewReader(dir)
+	r, err := NewReader(dir)
+	if err != nil {
+		return nil, err
+	}
 	outline, translations, err := r.Read()
 	if err != nil {
 		return nil, err
 	}
-	d := &Diplomat{}
-	d.SetOutline(outline)
-	translationMap := make(map[string]*PartialTranslation, len(translations))
-	for _, t := range translations {
-		translationMap[t.path] = t
-	}
-	d.SetTranslations(translationMap)
+	d := NewByValue(outline, translations)
 	return d, nil
 }
 
-func NewDiplomatWatchDirectory(dir string) (d *Diplomat, errorChan <-chan error, changeListener <-chan bool) {
-	r := NewReader(dir)
+func NewDiplomatWatchDirectory(dir string) (d *Diplomat, errorChan <-chan error) {
+	r, err := NewReader(dir)
+	if err != nil {
+		ec := make(chan error)
+		ec <- err
+		errorChan = ec
+		return
+	}
 	outlineChan, translationChan, ec := r.Watch()
-	proxiedOutlineChan := make(chan *Outline)
-	proxiedTranslationChan := make(chan *PartialTranslation)
-	c := make(chan bool)
-	go func() {
-		for o := range outlineChan {
-			select {
-			case c <- true:
-			default:
-			}
-			proxiedOutlineChan <- o
-		}
-	}()
-
-	go func() {
-		for t := range translationChan {
-			select {
-			case c <- true:
-			default:
-			}
-			proxiedTranslationChan <- t
-		}
-	}()
-
-	d = NewDiplomatAsync(proxiedOutlineChan, proxiedTranslationChan)
-	changeListener = c
+	d = NewDiplomatAsync(outlineChan, translationChan)
 	errorChan = ec
 	return
 }

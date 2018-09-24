@@ -53,17 +53,13 @@ var (
 				}
 			}
 			outDir := filepath.Join(projectDir, "out")
-			d, errChan, changeListener := diplomat.NewDiplomatWatchDirectory(projectDir)
+			d, errChan := diplomat.NewDiplomatWatchDirectory(projectDir)
 			go func() {
 				for e := range errChan {
 					log.Println("error:", e)
 				}
 			}()
-			go func() {
-				for range changeListener {
-					d.Output(outDir)
-				}
-			}()
+			go d.Watch(outDir)
 			quit := make(chan os.Signal, 1)
 			signal.Notify(quit, os.Interrupt)
 			<-quit
