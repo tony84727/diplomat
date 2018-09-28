@@ -1,8 +1,10 @@
 package diplomat
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -34,10 +36,20 @@ type PartialTranslation struct {
 	data YAMLMap
 }
 
-func NewReader(dir string) *Reader {
-	return &Reader{
-		dir: dir,
+func NewReader(dir string) (*Reader, error) {
+	var path string
+	if filepath.IsAbs(dir) {
+		path = dir
+	} else {
+		pwd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		path = filepath.Join(pwd, dir)
 	}
+	return &Reader{
+		dir: path,
+	}, nil
 }
 
 type Reader struct {
@@ -145,39 +157,67 @@ func doWatch(events <-chan fsnotify.Event) (<-chan *Outline, <-chan *PartialTran
 	outlineChan := make(chan *Outline)
 	partialTranslationChan := make(chan *PartialTranslation)
 	errorSink := newAsyncErrorSink()
-	for e := range events {
-		if isOutlineFile(e.Name) {
-			go func(path string) {
-				o, err := parseOutline(path)
-				if err != nil {
-					errorSink.push(err)
-					return
-				}
-				outlineChan <- o
-			}(e.Name)
-		} else {
-			go func(path string) {
-				t, err := parsePartialTranslation(path)
-				if err != nil {
-					errorSink.push(err)
-					return
-				}
-				partialTranslationChan <- t
-			}(e.Name)
+	go func() {
+		for e := range events {
+			if isOutlineFile(e.Name) {
+				go func(path string) {
+					o, err := parseOutline(path)
+					if err != nil {
+						errorSink.push(err)
+						return
+					}
+					outlineChan <- o
+				}(e.Name)
+			} else {
+				go func(path string) {
+					t, err := parsePartialTranslation(path)
+					if err != nil {
+						errorSink.push(err)
+						return
+					}
+					partialTranslationChan <- t
+				}(e.Name)
+			}
 		}
-	}
+	}()
 	return outlineChan, partialTranslationChan, errorSink.errorChan
 }
 
 func (r Reader) Watch() (<-chan *Outline, <-chan *PartialTranslation, <-chan error) {
+	outline := make(chan *Outline)
+	translations := make(chan *PartialTranslation)
 	errorSink := newAsyncErrorSink()
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		errorSink.push(err)
-		return nil, nil, errorSink.errorChan
-	}
-	watcher.Add(r.dir)
-	return doWatch(watcher.Events)
+	go func() {
+		watcher, err := fsnotify.NewWatcher()
+		if err != nil {
+			errorSink.push(err)
+			return
+		}
+		err = watcher.Add(r.dir)
+		if err != nil {
+			errorSink.push(fmt.Errorf("cannot watch %s, error: %s", r.dir, err))
+			return
+		}
+		oc, tc, ec := doWatch(watcher.Events)
+		go func() {
+			for o := range oc {
+				outline <- o
+			}
+		}()
+
+		go func() {
+			for t := range tc {
+				translations <- t
+			}
+		}()
+
+		go func() {
+			for e := range ec {
+				errorSink.push(e)
+			}
+		}()
+	}()
+	return outline, translations, errorSink.errorChan
 }
 
 func isOutlineFile(name string) bool {

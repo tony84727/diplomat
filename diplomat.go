@@ -2,7 +2,6 @@ package diplomat
 
 import (
 	"fmt"
-	"log"
 )
 
 type Diplomat struct {
@@ -40,7 +39,6 @@ func (d Diplomat) getMergedYamlMap() YAMLMap {
 func (d Diplomat) Watch(outDir string) error {
 	l := make(chan interface{})
 	d.changeListeners.addListener(l)
-	log.Println("output")
 	for range l {
 		if d.outline != nil {
 			err := d.Output(outDir)
@@ -182,7 +180,10 @@ func NewDiplomatAsync(outlineSource <-chan *Outline, translationSource <-chan *P
 }
 
 func NewDiplomatForDirectory(dir string) (*Diplomat, error) {
-	r := NewReader(dir)
+	r, err := NewReader(dir)
+	if err != nil {
+		return nil, err
+	}
 	outline, translations, err := r.Read()
 	if err != nil {
 		return nil, err
@@ -192,7 +193,13 @@ func NewDiplomatForDirectory(dir string) (*Diplomat, error) {
 }
 
 func NewDiplomatWatchDirectory(dir string) (d *Diplomat, errorChan <-chan error) {
-	r := NewReader(dir)
+	r, err := NewReader(dir)
+	if err != nil {
+		ec := make(chan error)
+		ec <- err
+		errorChan = ec
+		return
+	}
 	outlineChan, translationChan, ec := r.Watch()
 	d = NewDiplomatAsync(outlineChan, translationChan)
 	errorChan = ec
