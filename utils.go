@@ -93,3 +93,35 @@ func (fh fanoutHub) forwardMessage(channel chan<- interface{}, message interface
 	}
 	wg.Done()
 }
+
+type pathBasedThrottler struct {
+	threshold time.Duration
+	channels  map[string]chan<- fsnotify.Event
+}
+
+func newPathBasedThrottler(threshold time.Duration) *pathBasedThrottler {
+	return &pathBasedThrottler{
+		threshold: threshold,
+		channels:  make(map[string]chan<- fsnotify.Event),
+	}
+}
+
+func (pbt *pathBasedThrottler) run(input <-chan fsnotify.Event) <-chan fsnotify.Event {
+	output := make(chan fsnotify.Event)
+	// distribute
+	go func() {
+		for i := range input {
+			if _, ok := pbt.channels[i.Name]; !ok {
+				throttled := make(chan fsnotify.Event)
+				go func() {
+					for e := range throttle(pbt.threshold, throttled) {
+						output <- e
+					}
+				}()
+				pbt.channels[i.Name] = throttled
+			}
+			pbt.channels[i.Name] <- i
+		}
+	}()
+	return output
+}
