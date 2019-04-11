@@ -3,7 +3,6 @@ module github.com/insufficientchocolate/diplomat
 go 1.12
 
 require (
-	github.com/MinecraftXwinP/diplomat v0.0.0-20180904050420-ca78324e02f7
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deckarep/golang-set v1.7.1
 	github.com/fsnotify/fsnotify v1.4.7
