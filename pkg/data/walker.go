@@ -9,11 +9,20 @@ func NewTranslationWalker(root Translation) *TranslationWalker {
 }
 
 type worklistEntry struct {
-	prefix *string
 	root Translation
+	prefix *string
 }
 
 func (t TranslationWalker) GetKeys() []string {
+	keys := make([]string,0)
+	t.ForEachTextNode(func(path string,textNode Translation) error {
+		keys = append(keys, path)
+		return nil
+	})
+	return keys
+}
+
+func (t TranslationWalker) ForEachTextNode(callback func (path string,textNode Translation) error) error {
 	keys := make([]string, 0)
 	worklist := []worklistEntry{{root:t.root}}
 	for len(worklist) > 0 {
@@ -27,10 +36,13 @@ func (t TranslationWalker) GetKeys() []string {
 		prefix = prefix + key
 		if text := start.root.GetText(); text != nil {
 			keys = append(keys, prefix)
+			if err := callback(prefix,start.root); err != nil {
+				return err
+			}
 		}
 		for _, child := range start.root.GetChildren() {
 			worklist = append(worklist, worklistEntry{prefix: &prefix,root:child})
 		}
 	}
-	return keys
+	return nil
 }
