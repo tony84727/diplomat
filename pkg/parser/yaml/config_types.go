@@ -8,8 +8,32 @@ type preprocessor struct {
 	data.SimplePreprocessor
 }
 
+func (p *preprocessor) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var actual struct{
+		Type    string      `yaml:"type"`
+		Options interface{} `yaml:"options"`
+	}
+	if err := unmarshal(&actual); err != nil {
+		return err
+	}
+	p.Type = actual.Type
+	p.Options = actual.Options
+	return nil
+}
+
 type templateOption struct {
-	data.TemplateOption
+	data.SimpleTemplateOption
+}
+
+func (t *templateOption) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var actual struct{
+		Filename string `yaml:"filename"`
+	}
+	if err := unmarshal(&actual); err != nil {
+		return err
+	}
+	t.SimpleTemplateOption = data.SimpleTemplateOption(actual.Filename)
+	return nil
 }
 
 type template struct {
@@ -18,14 +42,14 @@ type template struct {
 
 func (t *template) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var actual struct{
-		options templateOption
-		typeKey string `yaml:"type"`
+		Options templateOption `yaml:"options"`
+		Type string `yaml:"type"`
 	}
 	if err := unmarshal(&actual); err != nil {
 		return err
 	}
-	t.Type = actual.typeKey
-	t.Options = actual.options
+	t.Type = actual.Type
+	t.Options = actual.Options
 	return nil
 }
 
@@ -35,19 +59,19 @@ type output struct {
 
 func (o *output) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var actual struct{
-		selectors []string
-		templates []template
+		Selectors []string `yaml:"selectors"`
+		Templates []template `yaml:"templates"`
 	}
 
 	if err := unmarshal(&actual);err != nil {
 		return err
 	}
-	o.Selectors = make([]data.Selector, len(actual.selectors))
-	for i, selector := range actual.selectors {
+	o.Selectors = make([]data.Selector, len(actual.Selectors))
+	for i, selector := range actual.Selectors {
 		o.Selectors[i] = data.Selector(selector)
 	}
-	o.Templates = make([]data.Template, len(actual.templates))
-	for i, template := range actual.templates {
+	o.Templates = make([]data.Template, len(actual.Templates))
+	for i, template := range actual.Templates {
 		o.Templates[i] = template
 	}
 	return nil
@@ -59,18 +83,18 @@ type configurationFile struct {
 
 func (c *configurationFile) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var actual struct{
-		outputs []output
-		preprocessors []preprocessor
+		Outputs       []output `yaml:"outputs"`
+		Preprocessors []preprocessor `yaml:"preprocessors"`
 	}
 	if err := unmarshal(&actual); err != nil {
 		return err
 	}
-	c.Outputs = make([]data.Output,len(actual.outputs))
-	for i, output := range actual.outputs {
+	c.Outputs = make([]data.Output,len(actual.Outputs))
+	for i, output := range actual.Outputs {
 		c.Outputs[i] = output
 	}
-	c.Preprocessors = make([]data.Preprocessor, len(actual.preprocessors))
-	for i, preprocessor := range actual.preprocessors {
+	c.Preprocessors = make([]data.Preprocessor, len(actual.Preprocessors))
+	for i, preprocessor := range actual.Preprocessors {
 		c.Preprocessors[i] = preprocessor
 	}
 	return nil
