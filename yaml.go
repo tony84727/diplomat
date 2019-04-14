@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	set "github.com/deckarep/golang-set"
+	sec "github.com/insufficientchocolate/diplomat/pkg/selector"
 )
 
 func interfaceMapToStringMap(in map[interface{}]interface{}) map[string]interface{} {
@@ -198,7 +199,7 @@ func (yamlMap YAMLMap) GetKeys() [][]string {
 	return keys
 }
 
-func (yamlMap YAMLMap) filterBySelectorOnBase(base []string, s Selector) YAMLMap {
+func (yamlMap YAMLMap) filterBySelectorOnBase(base []string, s sec.Selector) YAMLMap {
 	filtered := make(map[string]interface{})
 	for k, i := range yamlMap {
 		key := make([]string, len(base)+1)
@@ -226,7 +227,7 @@ func (yamlMap YAMLMap) filterBySelectorOnBase(base []string, s Selector) YAMLMap
 	return filtered
 }
 
-func (yamlMap YAMLMap) FilterBySelector(s Selector) YAMLMap {
+func (yamlMap YAMLMap) FilterBySelector(s sec.Selector) YAMLMap {
 	return yamlMap.filterBySelectorOnBase([]string{}, s)
 }
 

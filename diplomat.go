@@ -2,6 +2,7 @@ package diplomat
 
 import (
 	"fmt"
+	sec "github.com/insufficientchocolate/diplomat/pkg/selector"
 )
 
 type Diplomat struct {
@@ -62,11 +63,11 @@ func (d Diplomat) Output(outDir string) error {
 		return fmt.Errorf("preprocessor: %s", err)
 	}
 	for _, oc := range d.outline.Output {
-		prefixSelectors := make([]Selector, len(oc.Selectors))
+		prefixSelectors := make([]sec.Selector, len(oc.Selectors))
 		for i, prefix := range oc.Selectors {
-			prefixSelectors[i] = NewPrefixSelector(prefix)
+			prefixSelectors[i] = sec.NewPrefixSelector(prefix)
 		}
-		selector := NewCombinedSelector(prefixSelectors...)
+		selector := sec.NewCombinedSelector(prefixSelectors...)
 		selected := all.FilterBySelector(selector)
 		keys := selected.GetKeys()
 		m := make(map[string]YAMLMap)

@@ -7,6 +7,8 @@ import (
 
 	"github.com/go-yaml/yaml"
 	"github.com/stretchr/testify/assert"
+
+	sec "github.com/insufficientchocolate/diplomat/pkg/selector"
 )
 
 func TestYAMLOptionGet(t *testing.T) {
@@ -107,7 +109,7 @@ func TestGetKeys(t *testing.T) {
 
 func TestFilterBySelector(t *testing.T) {
 	yamlMap := getSampleYAMLMap()
-	filtered := yamlMap.FilterBySelector(NewPrefixSelector("admin"))
+	filtered := yamlMap.FilterBySelector(sec.NewPrefixSelector("admin"))
 	assert.Len(t, filtered, 1)
 }
 
