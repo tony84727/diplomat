@@ -3,6 +3,7 @@ package transfrom
 import (
 	"github.com/insufficientchocolate/diplomat/pkg/data"
 	"github.com/stretchr/testify/suite"
+	"strings"
 	"testing"
 )
 
@@ -25,8 +26,8 @@ func (c ChineseTransformerTestSuite) TestTransform() {
 	c.Require().NoError(transformer.Transform(translations))
 	exist := false
 	walker := data.NewTranslationWalker(translations)
-	walker.ForEachTextNode(func(path string, textNode data.Translation) error {
-		if path == ".hello.zh-CN" {
+	walker.ForEachTextNode(func(paths []string, textNode data.Translation) error {
+		if strings.Join(paths,".") == ".hello.zh-CN" {
 			c.Equal("学问", *textNode.GetText())
 			exist = true
 		}

@@ -25,7 +25,7 @@ type ChineseTransformer struct {
 func (c ChineseTransformer) Transform(translation data.Translation) error {
 	walker := data.NewTranslationWalker(translation)
 	toAdd := make([]data.Translation, 0)
-	walker.ForEachTextNode(func(path string, textNode data.Translation) error {
+	walker.ForEachTextNode(func(paths []string, textNode data.Translation) error {
 		if textNode.GetKey() == c.option.from {
 			toAdd = append(toAdd, textNode)
 		}
