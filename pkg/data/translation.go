@@ -4,7 +4,7 @@ type Translation interface {
 	GetKey() string
 	SetText(text string)
 	GetText() *string
-	GetChildren() []Translation
+	GetChildren() map[string]Translation
 	AddChild(child Translation)
 	SetParent(parent Translation)
 	GetParent() (parent Translation)
@@ -12,7 +12,7 @@ type Translation interface {
 type translationNode struct {
 	key string
 	text *string
-	children []Translation
+	children map[string]Translation
 	parent Translation
 }
 
@@ -24,13 +24,13 @@ func (t translationNode) GetText() *string {
 	return t.text
 }
 
-func (t translationNode) GetChildren() []Translation {
+func (t translationNode) GetChildren() map[string]Translation {
 	return t.children
 }
 
 func (t *translationNode) AddChild(child Translation) {
 	child.SetParent(t)
-	t.children = append(t.children, child)
+	t.children[child.GetKey()] = child
 }
 
 func (t *translationNode) SetText(text string) {
@@ -46,5 +46,5 @@ func (t translationNode) GetParent() (parent Translation) {
 }
 
 func NewTranslation(key string) Translation {
-	return &translationNode{key:key,children:make([]Translation, 0)}
+	return &translationNode{key:key,children:make(map[string]Translation)}
 }
