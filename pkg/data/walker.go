@@ -17,7 +17,7 @@ type worklistEntry struct {
 
 func (t TranslationWalker) GetKeys() []string {
 	keys := make([]string,0)
-	t.ForEachTextNode(func(paths []string,textNode Translation) error {
+	_ = t.ForEachTextNode(func(paths []string,textNode Translation) error {
 		keys = append(keys, strings.Join(paths, "."))
 		return nil
 	})
@@ -29,7 +29,7 @@ func (t TranslationWalker) ForEachTextNodeWithBacktracking(callback func(paths [
 		start := worklist[0]
 		worklist = worklist[1:]
 		key := start.root.GetKey()
-		prefix := append(start.prefix,key)
+		prefix := append(append([]string{},start.prefix...),key)
 		if text := start.root.GetText(); text != nil {
 			if err := callback(prefix,start.root); err != nil {
 				return err
