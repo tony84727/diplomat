@@ -20,7 +20,7 @@ func (p Preprocessor) Process(translation data.Translation, option interface{}) 
 	walker := data.NewTranslationWalker(translation)
 	return walker.ForEachTextNode(func(paths []string, textNode data.Translation) error {
 		if paths[len(paths) - 1] == config.From {
-			if _,exist := textNode.GetParent().GetChildren()[config.To]; !exist {
+			if c := textNode.GetParent().GetChild(config.To); c == nil {
 				toNode := data.NewTranslation(config.To)
 				toNode.SetText(*textNode.GetText())
 			}

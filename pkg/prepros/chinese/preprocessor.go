@@ -68,7 +68,7 @@ func (p Preprocessor) Process(translation data.Translation, option interface{}) 
 		if paths[len(paths) -1] == config.From {
 			keyNode := textNode.GetParent()
 			// ignore if "to" node already exists
-			if _, exist := keyNode.GetChildren()[config.To]; exist {
+			if c := keyNode.GetChild(config.To); c != nil {
 				return nil
 			}
 			toNode := data.NewTranslation(config.To)

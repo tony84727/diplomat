@@ -9,8 +9,8 @@ func (t TranslationMerger) Merge(other Translation) {
 	_ = walker.ForEachTextNode(func(paths []string, textNode Translation) error {
 		var current Translation = t
 		for _, segment := range paths[1:len(paths)-1] {
-			child, exist := current.GetChildren()[segment]
-			if !exist {
+			child := current.GetChild(segment)
+			if child == nil {
 				child = NewTranslation(segment)
 				current.AddChild(child)
 			}
