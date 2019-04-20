@@ -11,7 +11,7 @@ type TranslationParser struct {
 	root data.Translation
 }
 
-type translationFile map[interface{}]interface{}
+type translationFile yaml.MapSlice
 
 func (p *TranslationParser) GetTranslation() (data.Translation,error) {
 	if p.root != nil {
@@ -41,14 +41,13 @@ func (p *TranslationParser) parse() error {
 }
 
 func (p TranslationParser) assignTranslations(root data.Translation,input translationFile) error {
-	for k,entry := range input {
-		stringKey, ok := k.(string)
+	for _,item := range input {
+		stringKey, ok := item.Key.(string)
 		if !ok {
 			return fmt.Errorf("unexpected %v", input)
 		}
 		current := data.NewTranslation(stringKey)
-		switch v := entry.(type) {
-		case map[interface{}]interface{}:
+		switch v := item.Value.(type) {
 		case translationFile:
 			p.assignTranslations(current, translationFile(v))
 		case string:
