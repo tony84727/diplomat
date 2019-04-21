@@ -1,6 +1,5 @@
 package prepros
 
-
 var (
 	Manager *ManagerImpl
 )

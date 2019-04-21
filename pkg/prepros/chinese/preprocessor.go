@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/insufficientchocolate/diplomat/pkg/data"
+	"github.com/insufficientchocolate/diplomat/pkg/prepros"
 	"github.com/siongui/gojianfan"
 )
 
@@ -77,5 +78,9 @@ func (p Preprocessor) Process(translation data.Translation, option interface{}) 
 		}
 		return nil
 	})
+}
+
+func init() {
+	prepros.Manager.Registry("chinese", &Preprocessor{})
 }
 

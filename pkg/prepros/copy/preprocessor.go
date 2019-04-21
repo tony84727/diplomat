@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/insufficientchocolate/diplomat/pkg/data"
+	"github.com/insufficientchocolate/diplomat/pkg/prepros"
 )
 
 type Preprocessor struct {
@@ -23,6 +24,7 @@ func (p Preprocessor) Process(translation data.Translation, option interface{}) 
 			if c := textNode.GetParent().GetChild(config.To); c == nil {
 				toNode := data.NewTranslation(config.To)
 				toNode.SetText(*textNode.GetText())
+				textNode.GetParent().AddChild(toNode)
 			}
 		}
 		return nil
@@ -58,5 +60,9 @@ func (Preprocessor) validConfig(config *Config) error {
 		return errors.New("to is empty")
 	}
 	return nil
+}
+
+func init() {
+	prepros.Manager.Registry("copy", &Preprocessor{})
 }
 
