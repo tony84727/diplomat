@@ -37,8 +37,8 @@ func ExampleTemplateEmitter_Emit() {
 	fmt.Println(string(output))
 	// Output:
 	//Translations:
-	//.admin.admin.zh-TW => 管理員
-	//.admin.admin.en => Admin
-	//.admin.message.hello.zh-TW => 您好
-	//.admin.message.hello.en => Hello!
+	//admin.admin.zh-TW => 管理員
+	//admin.admin.en => Admin
+	//admin.message.hello.zh-TW => 您好
+	//admin.message.hello.en => Hello!
 }

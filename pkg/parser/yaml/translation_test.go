@@ -19,10 +19,10 @@ func (p TranslationParserTestSuite) TestParse() {
 	p.Require().NoError(err)
 	walker := data.NewTranslationWalker(translation)
 	p.ElementsMatch([]string{
-		".admin.admin.zh-TW",
-		".admin.admin.en",
-		".admin.message.hello.zh-TW",
-		".admin.message.hello.en",
+		"admin.admin.zh-TW",
+		"admin.admin.en",
+		"admin.message.hello.zh-TW",
+		"admin.message.hello.en",
 	}, walker.GetKeys())
 }
 

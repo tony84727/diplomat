@@ -11,7 +11,7 @@ type translationWalkerTestSuite struct {
 }
 
 func (t translationWalkerTestSuite) TestGetKeys() {
-	root := NewTranslation("root")
+	root := NewTranslation("")
 	hello := NewTranslation("hello")
 	helloEnglish := NewTranslation("english")
 	helloEnglish.SetText("hello")
@@ -22,11 +22,11 @@ func (t translationWalkerTestSuite) TestGetKeys() {
 	root.AddChild(hello)
 	walker := NewTranslationWalker(root)
 	keys := walker.GetKeys()
-	t.ElementsMatch([]string{"root.hello.english","root.hello.chinese"},keys)
+	t.ElementsMatch([]string{"hello.english","hello.chinese"},keys)
 }
 
 func (t translationWalkerTestSuite) TestBacktracking() {
-	root := NewTranslation("root")
+	root := NewTranslation("")
 	hello := NewTranslation("hello")
 	helloEnglish := NewTranslation("en")
 	helloEnglish.SetText("Hello")
@@ -43,9 +43,9 @@ func (t translationWalkerTestSuite) TestBacktracking() {
 		keys = append(keys, strings.Join(paths, "."))
 		return nil
 	}, func(paths []string) bool {
-		return strings.Join(paths,".") != "root.world"
+		return paths[0] != "world"
 	}))
-	t.ElementsMatch([]string{"root.hello.en"}, keys)
+	t.ElementsMatch([]string{"hello.en"}, keys)
 }
 
 func TestTranslationWalker(t *testing.T) {

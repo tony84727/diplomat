@@ -29,12 +29,12 @@ func (p PreprocessorTestSuite) TestProcess() {
 	p.NoError(walker.ForEachTextNode(func(paths []string, textNode data.Translation) error {
 		key :=  strings.Join(paths, ".")
 		keys = append(keys,key)
-		if key == ".question.zh-CN" {
+		if key == "question.zh-CN" {
 			p.Equal("问题", *textNode.GetText())
 		}
 		return nil
 	}))
-	p.ElementsMatch([]string{".question.zh-TW",".question.zh-CN"}, keys)
+	p.ElementsMatch([]string{"question.zh-TW","question.zh-CN"}, keys)
 }
 
 func TestPreprocessor(t *testing.T) {

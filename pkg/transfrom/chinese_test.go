@@ -27,7 +27,7 @@ func (c ChineseTransformerTestSuite) TestTransform() {
 	exist := false
 	walker := data.NewTranslationWalker(translations)
 	walker.ForEachTextNode(func(paths []string, textNode data.Translation) error {
-		if strings.Join(paths,".") == ".hello.zh-CN" {
+		if strings.Join(paths,".") == "hello.zh-CN" {
 			c.Equal("学问", *textNode.GetText())
 			exist = true
 		}

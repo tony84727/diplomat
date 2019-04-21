@@ -24,7 +24,10 @@ func (t TranslationWalker) GetKeys() []string {
 	return keys
 }
 func (t TranslationWalker) ForEachTextNodeWithBacktracking(callback func(paths []string, textNode Translation) error, accept func(paths []string) bool) error {
-	worklist := []worklistEntry{{root:t.root, prefix: []string{}}}
+	worklist := make([]worklistEntry, len(t.root.GetChildren()))
+	for i, c := range t.root.GetChildren() {
+		worklist[i] = worklistEntry{root: c, prefix:[]string{}}
+	}
 	for len(worklist) > 0 {
 		start := worklist[0]
 		worklist = worklist[1:]

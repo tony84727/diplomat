@@ -30,13 +30,13 @@ func (t TranslationMergerTestSuite) TestMerge() {
 
 	walker := NewTranslationWalker(merger)
 	keys := make([]string, 0)
-	walker.ForEachTextNode(func(path []string, textNode Translation) error {
-		keys = append(keys, strings.Join(path,"."))
+	_ = walker.ForEachTextNode(func(path []string, textNode Translation) error {
+		keys = append(keys, strings.Join(path, "."))
 		return nil
 	})
 	t.ElementsMatch([]string{
-		".hello.zh-TW",
-		".hello.en",
+		"hello.zh-TW",
+		"hello.en",
 	},keys)
 }
 
