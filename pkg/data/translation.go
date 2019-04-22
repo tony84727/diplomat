@@ -39,7 +39,13 @@ func (t translationNode) GetChild(key string) Translation {
 }
 
 func (t *translationNode) AddChild(child Translation) {
-	child.SetParent(t)
+	t.addChild(child, true)
+}
+
+func (t *translationNode) addChild(child Translation, setParent bool) {
+	if setParent {
+		child.SetParent(t)
+	}
 	key := child.GetKey()
 	index, exist := t.keyIndex[key]
 	if exist {
@@ -61,6 +67,10 @@ func (t translationNode) GetParent() (parent Translation) {
 	return t.parent
 }
 
-func NewTranslation(key string) Translation {
+func newTranslationNode(key string) *translationNode {
 	return &translationNode{key:key,children:make([]Translation, 0), keyIndex: make(map[string]int)}
+}
+
+func NewTranslation(key string) Translation {
+	return newTranslationNode(key)
 }

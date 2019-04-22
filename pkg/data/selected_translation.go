@@ -1,6 +1,9 @@
 package data
 
-import "github.com/insufficientchocolate/diplomat/pkg/selector"
+import (
+	"github.com/insufficientchocolate/diplomat/pkg/selector"
+	"strings"
+)
 
 type selectedTranslation struct {
 	selector.Selector
@@ -8,17 +11,14 @@ type selectedTranslation struct {
 	shallowTree Translation
 }
 
-
 func NewSelectedTranslation(origin Translation, selector selector.Selector) Translation {
-	shallowTree := NewTranslation("")
-	for _, c := range origin.GetChildren() {
-		shallowTree.AddChild(c)
-		// FIXME: AddChild will aslo set parent. Set it back to origin here. Maybe introduce a flag to disable auto setting parent
-		c.SetParent(origin)
-	}
-	return &selectedTranslation{
-		Selector: selector,
-		Translation: origin,
-		shallowTree: shallowTree,
-	}
+	walker := NewTranslationWalker(origin)
+	root := NewBuilder()
+	_ = walker.ForEachTextNodeWithBacktracking(func(paths []string, textNode Translation) error {
+		root.Add(strings.Join(paths, "."), *textNode.GetText())
+		return nil
+	}, func(paths []string) bool {
+		return selector.IsValid(paths)
+	})
+	return root
 }
