@@ -31,4 +31,8 @@ func NewObjectEmitter() *ObjectEmitter {
 	}
 }
 
+func init() {
+	emit.Registry.Registry("js-object", NewObjectEmitter())
+}
+
 
