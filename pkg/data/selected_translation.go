@@ -1,16 +1,16 @@
-package selector
+package data
 
-import "github.com/insufficientchocolate/diplomat/pkg/data"
+import "github.com/insufficientchocolate/diplomat/pkg/selector"
 
 type selectedTranslation struct {
-	Selector
-	data.Translation
-	shallowTree data.Translation
+	selector.Selector
+	Translation
+	shallowTree Translation
 }
 
 
-func NewSelectedTranslation(origin data.Translation, selector Selector) data.Translation {
-	shallowTree := data.NewTranslation("")
+func NewSelectedTranslation(origin Translation, selector selector.Selector) Translation {
+	shallowTree := NewTranslation("")
 	for _, c := range origin.GetChildren() {
 		shallowTree.AddChild(c)
 		// FIXME: AddChild will aslo set parent. Set it back to origin here. Maybe introduce a flag to disable auto setting parent

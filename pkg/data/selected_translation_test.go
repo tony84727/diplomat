@@ -1,7 +1,7 @@
-package selector
+package data
 
 import (
-	"github.com/insufficientchocolate/diplomat/pkg/data"
+	"github.com/insufficientchocolate/diplomat/pkg/selector"
 	"github.com/stretchr/testify/suite"
 	"strings"
 	"testing"
@@ -20,16 +20,16 @@ func (s SelectedTranslationTestSuite) TestWalk() {
 		"message.evening.greeting.zh-TW": "晚上好",
 		"message.evening.greeting.en": "Good evening",
 	}
-	translationTree := data.NewBuilder()
+	translationTree := NewBuilder()
 	for key, text := range morning {
 		translationTree.Add(key, text)
 	}
 	for key, text := range evening {
 		translationTree.Add(key, text)
 	}
-	walker := data.NewTranslationWalker(NewSelectedTranslation(translationTree, NewPrefixSelector("message","morning")))
+	walker := NewTranslationWalker(NewSelectedTranslation(translationTree, selector.NewPrefixSelector("message","morning")))
 	collected := make(map[string]string)
-	_ = walker.ForEachTextNode(func(paths []string, textNode data.Translation) error {
+	_ = walker.ForEachTextNode(func(paths []string, textNode Translation) error {
 		collected[strings.Join(paths,".")] = *textNode.GetText()
 		return nil
 	})
