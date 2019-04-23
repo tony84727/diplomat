@@ -32,7 +32,7 @@ func NewObjectEmitter() *ObjectEmitter {
 }
 
 func init() {
-	emit.Registry.Registry("js-object", NewObjectEmitter())
+	emit.GlobalRegistry.Registry("js-object", NewObjectEmitter())
 }
 
 

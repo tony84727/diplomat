@@ -5,6 +5,7 @@ import (
 	"github.com/insufficientchocolate/diplomat"
 	"github.com/insufficientchocolate/diplomat/internal"
 	"github.com/insufficientchocolate/diplomat/pkg/data"
+	"github.com/insufficientchocolate/diplomat/pkg/emit"
 	_ "github.com/insufficientchocolate/diplomat/pkg/emit/javascript"
 	"github.com/insufficientchocolate/diplomat/pkg/parser/yaml"
 	"github.com/insufficientchocolate/diplomat/pkg/prepros"
@@ -82,7 +83,7 @@ var (
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			synthesizer := diplomat.NewSynthesizer(outDir,allTranslation)
+			synthesizer := diplomat.NewSynthesizer(outDir,allTranslation,emit.GlobalRegistry)
 			for _, o := range config.GetOutputs() {
 				err := synthesizer.Output(o)
 				if err != nil {

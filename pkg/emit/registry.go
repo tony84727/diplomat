@@ -1,22 +1,27 @@
 package emit
 
 var (
-	Registry EmitterRegistry
+	GlobalRegistry Registry
 )
 
-type EmitterRegistry struct {
+type Registry interface {
+	Get(name string) Emitter
+	Registry(name string,instance Emitter)
+}
+
+type emitterRegistryImpl struct {
 	instances map[string]Emitter
 }
 
-func (e *EmitterRegistry) Registry(name string, instance Emitter) {
+func (e *emitterRegistryImpl) Registry(name string, instance Emitter) {
 	e.instances[name] = instance
 }
 
-func (e *EmitterRegistry) Get(name string) Emitter {
+func (e *emitterRegistryImpl) Get(name string) Emitter {
 	return e.instances[name]
 }
 
 func init() {
-	Registry = EmitterRegistry{instances: make(map[string]Emitter)}
+	GlobalRegistry = &emitterRegistryImpl{instances: make(map[string]Emitter)}
 }
 

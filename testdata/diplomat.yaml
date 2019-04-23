@@ -16,4 +16,4 @@ outputs:
     templates:
       - type: js-object
         options:
-          filename: "control-panel.{{.Lang}}.js"
+          filename: "control-panel.js"

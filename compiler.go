@@ -14,10 +14,11 @@ import (
 type Synthesizer struct {
 	data.Translation
 	outputDir string
+	emitterRegistry emit.Registry
 }
 
-func NewSynthesizer(outputDir string,translation data.Translation) *Synthesizer {
-	return &Synthesizer{translation, outputDir}
+func NewSynthesizer(outputDir string,translation data.Translation, emitterRegistry emit.Registry) *Synthesizer {
+	return &Synthesizer{translation, outputDir, emitterRegistry}
 }
 
 func (s Synthesizer) Output(output data.Output) error {
@@ -32,7 +33,7 @@ func (s Synthesizer) Output(output data.Output) error {
 	var wg sync.WaitGroup
 	_ = os.MkdirAll(s.outputDir, 0755)
 	for _, t := range templates {
-		if i := emit.Registry.Get(t.GetType()); i != nil {
+		if i := s.emitterRegistry.Get(t.GetType()); i != nil {
 			wg.Add(1)
 			go func(t data.Template) {
 				defer wg.Done()
