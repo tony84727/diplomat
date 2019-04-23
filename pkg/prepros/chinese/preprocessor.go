@@ -81,6 +81,6 @@ func (p Preprocessor) Process(translation data.Translation, option interface{}) 
 }
 
 func init() {
-	prepros.Manager.Registry("chinese", &Preprocessor{})
+	prepros.GlobalRegistry.Registry("chinese", &Preprocessor{})
 }
 

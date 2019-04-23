@@ -63,6 +63,6 @@ func (Preprocessor) validConfig(config *Config) error {
 }
 
 func init() {
-	prepros.Manager.Registry("copy", &Preprocessor{})
+	prepros.GlobalRegistry.Registry("copy", &Preprocessor{})
 }
 

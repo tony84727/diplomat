@@ -53,7 +53,7 @@ var (
 			// reverse order
 			for i := len(preprocessorConfigs) -1; i >= 0; i-- {
 				p := preprocessorConfigs[i]
-				if instance := prepros.Manager.Get(p.GetType()); instance != nil {
+				if instance := prepros.GlobalRegistry.Get(p.GetType()); instance != nil {
 					preprocessorInstances = append(preprocessorInstances, func(translation data.Translation) error {
 						return instance.Process(translation, p.GetOptions())
 					})
