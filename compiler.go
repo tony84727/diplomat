@@ -1,1 +1,70 @@
 package diplomat
+
+import (
+	"github.com/insufficientchocolate/diplomat/pkg/data"
+	"github.com/insufficientchocolate/diplomat/pkg/emit"
+	"github.com/insufficientchocolate/diplomat/pkg/selector"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+)
+
+type Synthesizer struct {
+	data.Translation
+	outputDir string
+}
+
+func NewSynthesizer(outputDir string,translation data.Translation) *Synthesizer {
+	return &Synthesizer{translation, outputDir}
+}
+
+func (s Synthesizer) Output(output data.Output) error {
+	selectors := output.GetSelectors()
+	selectorInstance := make([]selector.Selector,len(selectors))
+	for i, s := range selectors {
+		selectorInstance[i] = selector.NewPrefixSelector(strings.Split(string(s),".")...)
+	}
+	selected := data.NewSelectedTranslation(s, selector.NewCombinedSelector(selectorInstance...))
+	templates := output.GetTemplates()
+	errChan := make(chan error)
+	var wg sync.WaitGroup
+	_ = os.MkdirAll(s.outputDir, 0755)
+	for _, t := range templates {
+		if i := emit.Registry.Get(t.GetType()); i != nil {
+			wg.Add(1)
+			go func(t data.Template) {
+				defer wg.Done()
+				output,err := i.Emit(selected)
+				if err != nil {
+					errChan <- err
+					return
+				}
+				if err := ioutil.WriteFile(filepath.Join(s.outputDir,t.GetOptions().GetFilename()), output, 0644); err != nil {
+					errChan <- err
+				}
+			}(t)
+		}
+	}
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+	defer func() {
+		// dump error
+		go func() {
+			for range errChan {}
+		}()
+		wg.Wait()
+		close(errChan)
+
+	}()
+	select {
+	case err := <-errChan:
+		return err
+	case <-done:
+		return nil
+	}
+}

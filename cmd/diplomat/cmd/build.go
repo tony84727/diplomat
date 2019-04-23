@@ -2,14 +2,18 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/insufficientchocolate/diplomat"
 	"github.com/insufficientchocolate/diplomat/internal"
 	"github.com/insufficientchocolate/diplomat/pkg/data"
+	_ "github.com/insufficientchocolate/diplomat/pkg/emit/javascript"
 	"github.com/insufficientchocolate/diplomat/pkg/parser/yaml"
 	"github.com/insufficientchocolate/diplomat/pkg/prepros"
+	_ "github.com/insufficientchocolate/diplomat/pkg/prepros/chinese"
+	_ "github.com/insufficientchocolate/diplomat/pkg/prepros/copy"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
-	"strings"
+	"path/filepath"
 )
 
 var (
@@ -29,7 +33,7 @@ var (
 					os.Exit(1)
 				}
 			}
-			//outDir := filepath.Join(projectDir, "out")
+			outDir := filepath.Join(projectDir, "out")
 			sourceSet := data.NewFileSystemSourceSet(projectDir)
 			configFile, err := sourceSet.GetConfigurationFile()
 			if err != nil {
@@ -78,13 +82,13 @@ var (
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			walker := data.NewTranslationWalker(allTranslation)
-			if err := walker.ForEachTextNode(func(paths []string, textNode data.Translation) error {
-				fmt.Println(strings.Join(paths, ".") + " => " + *textNode.GetText())
-				return nil
-			}); err != nil {
-				fmt.Println(err)
-				os.Exit(1)
+			synthesizer := diplomat.NewSynthesizer(outDir,allTranslation)
+			for _, o := range config.GetOutputs() {
+				err := synthesizer.Output(o)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
 			}
 		},
 	}
