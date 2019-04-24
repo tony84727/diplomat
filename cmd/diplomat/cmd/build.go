@@ -2,16 +2,17 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"github.com/tony84727/diplomat"
 	"github.com/tony84727/diplomat/internal"
 	"github.com/tony84727/diplomat/pkg/data"
 	"github.com/tony84727/diplomat/pkg/emit"
 	_ "github.com/tony84727/diplomat/pkg/emit/javascript"
+	"github.com/tony84727/diplomat/pkg/log"
 	"github.com/tony84727/diplomat/pkg/parser/yaml"
 	"github.com/tony84727/diplomat/pkg/prepros"
 	_ "github.com/tony84727/diplomat/pkg/prepros/chinese"
 	_ "github.com/tony84727/diplomat/pkg/prepros/copy"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -23,6 +24,7 @@ var (
 		Use:   "build",
 		Short: "build",
 		Run: func(cmd *cobra.Command, args []string) {
+			logger := log.NewColoredLogger()
 			var projectDir string
 			if len(args) > 0 {
 				projectDir = args[0]
@@ -42,10 +44,14 @@ var (
 				os.Exit(1)
 			}
 			configData, err := ioutil.ReadFile(configFile)
+			if err != nil {
+				logger.Error(err.Error())
+				os.Exit(1)
+			}
 			configParser := yaml.NewConfigurationParser(configData)
 			config, err := configParser.GetConfiguration()
 			if err != nil {
-				fmt.Println(err)
+				logger.Error(err.Error())
 				os.Exit(1)
 			}
 			preprocessorConfigs := config.GetPreprocessors()
@@ -63,18 +69,19 @@ var (
 			allTranslation := data.NewTranslationMerger(data.NewTranslation(""))
 			translationFiles, err := sourceSet.GetTranslationFiles()
 			if err != nil {
+				logger.Error(err.Error())
 				os.Exit(1)
 			}
 			for _, t := range translationFiles {
 				content, err := ioutil.ReadFile(t)
 				if err != nil {
-					fmt.Println(err)
+					logger.Error(err.Error())
 					os.Exit(1)
 				}
 				parser := yaml.NewParser(content)
 				translation, err := parser.GetTranslation()
 				if err != nil {
-					fmt.Println(err)
+					logger.Error(err.Error())
 					os.Exit(1)
 				}
 				allTranslation.Merge(translation)
@@ -83,11 +90,11 @@ var (
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			synthesizer := diplomat.NewSynthesizer(outDir, allTranslation, emit.GlobalRegistry)
+			synthesizer := diplomat.NewSynthesizer(outDir, allTranslation, emit.GlobalRegistry, logger)
 			for _, o := range config.GetOutputs() {
 				err := synthesizer.Output(o)
 				if err != nil {
-					fmt.Println(err)
+					logger.Error(err.Error())
 					os.Exit(1)
 				}
 			}
