@@ -1,7 +1,7 @@
 package data
 
 import (
-	"github.com/insufficientchocolate/diplomat/pkg/selector"
+	"github.com/tony84727/diplomat/pkg/selector"
 	"strings"
 )
 

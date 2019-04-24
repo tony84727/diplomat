@@ -1,8 +1,8 @@
 package transfrom
 
 import (
-	"github.com/insufficientchocolate/diplomat/pkg/data"
 	"github.com/siongui/gojianfan"
+	"github.com/tony84727/diplomat/pkg/data"
 )
 
 type ChineseTransformMode int
@@ -33,7 +33,7 @@ func (c ChineseTransformer) Transform(translation data.Translation) error {
 	})
 	for _, node := range toAdd {
 		translated := c.translate(*node.GetText())
-		translatedNode :=data.NewTranslation(c.option.to)
+		translatedNode := data.NewTranslation(c.option.to)
 		translatedNode.SetText(translated)
 		node.GetParent().AddChild(translatedNode)
 	}

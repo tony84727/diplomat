@@ -2,7 +2,7 @@ package emit
 
 import (
 	"bytes"
-	"github.com/insufficientchocolate/diplomat/pkg/data"
+	"github.com/tony84727/diplomat/pkg/data"
 	"strings"
 	"text/template"
 )
@@ -12,7 +12,7 @@ type TemplateEmitter struct {
 }
 
 type Pair struct {
-	Key []string
+	Key  []string
 	Text string
 }
 
@@ -30,17 +30,17 @@ func (t templateContext) Pairs() []Pair {
 	return pairs
 }
 
-func (t TemplateEmitter) Emit(translation data.Translation) ([]byte,error) {
+func (t TemplateEmitter) Emit(translation data.Translation) ([]byte, error) {
 	var buffer bytes.Buffer
 	err := t.template.Execute(&buffer, templateContext{translation})
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	return buffer.Bytes(), nil
 }
 
 func (t *TemplateEmitter) SetTemplate(content string) error {
-	tpl,err := template.New("main").Funcs(template.FuncMap{
+	tpl, err := template.New("main").Funcs(template.FuncMap{
 		"JoinKeys": strings.Join,
 	}).Parse(content)
 	if err != nil {
@@ -50,10 +50,10 @@ func (t *TemplateEmitter) SetTemplate(content string) error {
 	return nil
 }
 
-func NewTemplateEmitter(templateSource string) (*TemplateEmitter,error) {
+func NewTemplateEmitter(templateSource string) (*TemplateEmitter, error) {
 	emitter := &TemplateEmitter{}
 	if err := emitter.SetTemplate(templateSource); err != nil {
-		return nil,err
+		return nil, err
 	}
-	return emitter,nil
+	return emitter, nil
 }

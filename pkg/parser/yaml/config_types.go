@@ -1,7 +1,7 @@
 package yaml
 
 import (
-	"github.com/insufficientchocolate/diplomat/pkg/data"
+	"github.com/tony84727/diplomat/pkg/data"
 )
 
 type preprocessor struct {
@@ -9,7 +9,7 @@ type preprocessor struct {
 }
 
 func (p *preprocessor) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var actual struct{
+	var actual struct {
 		Type    string      `yaml:"type"`
 		Options interface{} `yaml:"options"`
 	}
@@ -26,7 +26,7 @@ type templateOption struct {
 }
 
 func (t *templateOption) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var actual struct{
+	var actual struct {
 		Filename string `yaml:"filename"`
 	}
 	if err := unmarshal(&actual); err != nil {
@@ -41,9 +41,9 @@ type template struct {
 }
 
 func (t *template) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var actual struct{
+	var actual struct {
 		Options templateOption `yaml:"options"`
-		Type string `yaml:"type"`
+		Type    string         `yaml:"type"`
 	}
 	if err := unmarshal(&actual); err != nil {
 		return err
@@ -58,12 +58,12 @@ type output struct {
 }
 
 func (o *output) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var actual struct{
-		Selectors []string `yaml:"selectors"`
+	var actual struct {
+		Selectors []string   `yaml:"selectors"`
 		Templates []template `yaml:"templates"`
 	}
 
-	if err := unmarshal(&actual);err != nil {
+	if err := unmarshal(&actual); err != nil {
 		return err
 	}
 	o.Selectors = make([]data.Selector, len(actual.Selectors))
@@ -82,14 +82,14 @@ type configurationFile struct {
 }
 
 func (c *configurationFile) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var actual struct{
-		Outputs       []output `yaml:"outputs"`
+	var actual struct {
+		Outputs       []output       `yaml:"outputs"`
 		Preprocessors []preprocessor `yaml:"preprocessors"`
 	}
 	if err := unmarshal(&actual); err != nil {
 		return err
 	}
-	c.Outputs = make([]data.Output,len(actual.Outputs))
+	c.Outputs = make([]data.Output, len(actual.Outputs))
 	for i, output := range actual.Outputs {
 		c.Outputs[i] = output
 	}
@@ -99,6 +99,3 @@ func (c *configurationFile) UnmarshalYAML(unmarshal func(interface{}) error) err
 	}
 	return nil
 }
-
-
-

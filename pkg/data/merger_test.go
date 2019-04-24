@@ -37,7 +37,7 @@ func (t TranslationMergerTestSuite) TestMerge() {
 	t.ElementsMatch([]string{
 		"hello.zh-TW",
 		"hello.en",
-	},keys)
+	}, keys)
 }
 
 func TestTranslationMerger(t *testing.T) {

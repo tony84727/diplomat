@@ -2,7 +2,7 @@ package data
 
 type SimpleConfiguration struct {
 	Preprocessors []Preprocessor
-	Outputs []Output
+	Outputs       []Output
 }
 
 func (s SimpleConfiguration) GetPreprocessors() []Preprocessor {
@@ -27,7 +27,7 @@ func (s SimpleOutput) GetTemplates() []Template {
 }
 
 type SimpleTemplate struct {
-	Type string
+	Type    string
 	Options TemplateOption
 }
 
@@ -46,7 +46,7 @@ func (s SimpleTemplateOption) GetFilename() string {
 }
 
 type SimplePreprocessor struct {
-	Type string
+	Type    string
 	Options interface{}
 }
 
@@ -57,6 +57,3 @@ func (s SimplePreprocessor) GetType() string {
 func (s SimplePreprocessor) GetOptions() interface{} {
 	return s.Options
 }
-
-
-

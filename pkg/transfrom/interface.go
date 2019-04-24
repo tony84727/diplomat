@@ -1,6 +1,6 @@
 package transfrom
 
-import "github.com/insufficientchocolate/diplomat/pkg/data"
+import "github.com/tony84727/diplomat/pkg/data"
 
 type Transformer interface {
 	Transform(translation data.Translation) error

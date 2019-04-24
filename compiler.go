@@ -1,9 +1,9 @@
 package diplomat
 
 import (
-	"github.com/insufficientchocolate/diplomat/pkg/data"
-	"github.com/insufficientchocolate/diplomat/pkg/emit"
-	"github.com/insufficientchocolate/diplomat/pkg/selector"
+	"github.com/tony84727/diplomat/pkg/data"
+	"github.com/tony84727/diplomat/pkg/emit"
+	"github.com/tony84727/diplomat/pkg/selector"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -13,19 +13,19 @@ import (
 
 type Synthesizer struct {
 	data.Translation
-	outputDir string
+	outputDir       string
 	emitterRegistry emit.Registry
 }
 
-func NewSynthesizer(outputDir string,translation data.Translation, emitterRegistry emit.Registry) *Synthesizer {
+func NewSynthesizer(outputDir string, translation data.Translation, emitterRegistry emit.Registry) *Synthesizer {
 	return &Synthesizer{translation, outputDir, emitterRegistry}
 }
 
 func (s Synthesizer) Output(output data.Output) error {
 	selectors := output.GetSelectors()
-	selectorInstance := make([]selector.Selector,len(selectors))
+	selectorInstance := make([]selector.Selector, len(selectors))
 	for i, s := range selectors {
-		selectorInstance[i] = selector.NewPrefixSelector(strings.Split(string(s),".")...)
+		selectorInstance[i] = selector.NewPrefixSelector(strings.Split(string(s), ".")...)
 	}
 	selected := data.NewSelectedTranslation(s, selector.NewCombinedSelector(selectorInstance...))
 	templates := output.GetTemplates()
@@ -37,12 +37,12 @@ func (s Synthesizer) Output(output data.Output) error {
 			wg.Add(1)
 			go func(t data.Template) {
 				defer wg.Done()
-				output,err := i.Emit(selected)
+				output, err := i.Emit(selected)
 				if err != nil {
 					errChan <- err
 					return
 				}
-				if err := ioutil.WriteFile(filepath.Join(s.outputDir,t.GetOptions().GetFilename()), output, 0644); err != nil {
+				if err := ioutil.WriteFile(filepath.Join(s.outputDir, t.GetOptions().GetFilename()), output, 0644); err != nil {
 					errChan <- err
 				}
 			}(t)
@@ -56,7 +56,8 @@ func (s Synthesizer) Output(output data.Output) error {
 	defer func() {
 		// dump error
 		go func() {
-			for range errChan {}
+			for range errChan {
+			}
 		}()
 		wg.Wait()
 		close(errChan)

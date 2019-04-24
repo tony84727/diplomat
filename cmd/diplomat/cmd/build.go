@@ -2,15 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/insufficientchocolate/diplomat"
-	"github.com/insufficientchocolate/diplomat/internal"
-	"github.com/insufficientchocolate/diplomat/pkg/data"
-	"github.com/insufficientchocolate/diplomat/pkg/emit"
-	_ "github.com/insufficientchocolate/diplomat/pkg/emit/javascript"
-	"github.com/insufficientchocolate/diplomat/pkg/parser/yaml"
-	"github.com/insufficientchocolate/diplomat/pkg/prepros"
-	_ "github.com/insufficientchocolate/diplomat/pkg/prepros/chinese"
-	_ "github.com/insufficientchocolate/diplomat/pkg/prepros/copy"
+	"github.com/tony84727/diplomat"
+	"github.com/tony84727/diplomat/internal"
+	"github.com/tony84727/diplomat/pkg/data"
+	"github.com/tony84727/diplomat/pkg/emit"
+	_ "github.com/tony84727/diplomat/pkg/emit/javascript"
+	"github.com/tony84727/diplomat/pkg/parser/yaml"
+	"github.com/tony84727/diplomat/pkg/prepros"
+	_ "github.com/tony84727/diplomat/pkg/prepros/chinese"
+	_ "github.com/tony84727/diplomat/pkg/prepros/copy"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
@@ -18,9 +18,9 @@ import (
 )
 
 var (
-	watch bool
+	watch    bool
 	buildCmd = &cobra.Command{
-		Use: "build",
+		Use:   "build",
 		Short: "build",
 		Run: func(cmd *cobra.Command, args []string) {
 			var projectDir string
@@ -49,9 +49,9 @@ var (
 				os.Exit(1)
 			}
 			preprocessorConfigs := config.GetPreprocessors()
-			preprocessorInstances := make([]internal.PreprocessorFunc,0,len(preprocessorConfigs))
+			preprocessorInstances := make([]internal.PreprocessorFunc, 0, len(preprocessorConfigs))
 			// reverse order
-			for i := len(preprocessorConfigs) -1; i >= 0; i-- {
+			for i := len(preprocessorConfigs) - 1; i >= 0; i-- {
 				p := preprocessorConfigs[i]
 				if instance := prepros.GlobalRegistry.Get(p.GetType()); instance != nil {
 					preprocessorInstances = append(preprocessorInstances, func(translation data.Translation) error {
@@ -83,7 +83,7 @@ var (
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			synthesizer := diplomat.NewSynthesizer(outDir,allTranslation,emit.GlobalRegistry)
+			synthesizer := diplomat.NewSynthesizer(outDir, allTranslation, emit.GlobalRegistry)
 			for _, o := range config.GetOutputs() {
 				err := synthesizer.Output(o)
 				if err != nil {
@@ -96,5 +96,5 @@ var (
 )
 
 func init() {
-	buildCmd.Flags().BoolVar(&watch, "watch",false,"watch changes")
+	buildCmd.Flags().BoolVar(&watch, "watch", false, "watch changes")
 }

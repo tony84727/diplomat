@@ -2,7 +2,7 @@ package emit
 
 import (
 	"fmt"
-	"github.com/insufficientchocolate/diplomat/pkg/parser/yaml"
+	"github.com/tony84727/diplomat/pkg/parser/yaml"
 )
 
 const translationFile = `
@@ -26,7 +26,7 @@ func ExampleTemplateEmitter_Emit() {
 {{-  range .Pairs }}
 {{ JoinKeys .Key "." }} => {{ .Text }}
 {{- end -}}`
-	emitter,err := NewTemplateEmitter(templateSource)
+	emitter, err := NewTemplateEmitter(templateSource)
 	if err != nil {
 		panic(err)
 	}

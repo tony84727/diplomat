@@ -11,11 +11,11 @@ type Translation interface {
 	GetParent() (parent Translation)
 }
 type translationNode struct {
-	key string
-	text *string
+	key      string
+	text     *string
 	children []Translation
 	keyIndex map[string]int
-	parent Translation
+	parent   Translation
 }
 
 func (t translationNode) GetKey() string {
@@ -68,7 +68,7 @@ func (t translationNode) GetParent() (parent Translation) {
 }
 
 func newTranslationNode(key string) *translationNode {
-	return &translationNode{key:key,children:make([]Translation, 0), keyIndex: make(map[string]int)}
+	return &translationNode{key: key, children: make([]Translation, 0), keyIndex: make(map[string]int)}
 }
 
 func NewTranslation(key string) Translation {

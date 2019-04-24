@@ -13,9 +13,9 @@ type BuilderTestSuite struct {
 func (b BuilderTestSuite) TestAdd() {
 	builder := NewBuilder()
 	translations := map[string]string{
-		"hello.en": "Hello",
-		"hello.zh-TW": "哈囉",
-		"email.message.reset_password.en": "Reset Password",
+		"hello.en":                           "Hello",
+		"hello.zh-TW":                        "哈囉",
+		"email.message.reset_password.en":    "Reset Password",
 		"email.message.reset_password.zh-TW": "重設密碼",
 	}
 	for key, text := range translations {
@@ -25,7 +25,7 @@ func (b BuilderTestSuite) TestAdd() {
 	walker := NewTranslationWalker(builder)
 	collectedTranslation := make(map[string]string)
 	_ = walker.ForEachTextNode(func(paths []string, textNode Translation) error {
-		collectedTranslation[strings.Join(paths,".")] = *textNode.GetText()
+		collectedTranslation[strings.Join(paths, ".")] = *textNode.GetText()
 		return nil
 	})
 	b.Equal(translations, collectedTranslation)

@@ -1,12 +1,12 @@
 package yaml
 
 import (
-	"github.com/insufficientchocolate/diplomat/pkg/data"
+	"github.com/tony84727/diplomat/pkg/data"
 	"gopkg.in/yaml.v2"
 )
 
 type ConfigurationParser struct {
-	content []byte
+	content       []byte
 	configuration data.Configuration
 }
 
@@ -15,9 +15,9 @@ func (c ConfigurationParser) GetConfiguration() (data.Configuration, error) {
 		return c.configuration, nil
 	}
 	if err := c.parse(); err != nil {
-		return nil,err
+		return nil, err
 	}
-	return c.configuration,nil
+	return c.configuration, nil
 }
 
 func (c *ConfigurationParser) parse() error {
@@ -30,5 +30,5 @@ func (c *ConfigurationParser) parse() error {
 }
 
 func NewConfigurationParser(content []byte) *ConfigurationParser {
-	return &ConfigurationParser{content:content}
+	return &ConfigurationParser{content: content}
 }

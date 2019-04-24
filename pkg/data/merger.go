@@ -24,4 +24,3 @@ func (t TranslationMerger) Merge(other Translation) {
 func NewTranslationMerger(root Translation) *TranslationMerger {
 	return &TranslationMerger{root}
 }
-

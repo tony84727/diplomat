@@ -3,8 +3,8 @@ package copy
 import (
 	"errors"
 	"fmt"
-	"github.com/insufficientchocolate/diplomat/pkg/data"
-	"github.com/insufficientchocolate/diplomat/pkg/prepros"
+	"github.com/tony84727/diplomat/pkg/data"
+	"github.com/tony84727/diplomat/pkg/prepros"
 )
 
 type Preprocessor struct {
@@ -16,11 +16,11 @@ func (p Preprocessor) Process(translation data.Translation, option interface{}) 
 		return err
 	}
 	if err := p.validConfig(config); err != nil {
-		return  err
+		return err
 	}
 	walker := data.NewTranslationWalker(translation)
 	return walker.ForEachTextNode(func(paths []string, textNode data.Translation) error {
-		if paths[len(paths) - 1] == config.From {
+		if paths[len(paths)-1] == config.From {
 			if c := textNode.GetParent().GetChild(config.To); c == nil {
 				toNode := data.NewTranslation(config.To)
 				toNode.SetText(*textNode.GetText())
@@ -33,11 +33,11 @@ func (p Preprocessor) Process(translation data.Translation, option interface{}) 
 
 type Config struct {
 	From string
-	To string
+	To   string
 }
 
 func (Preprocessor) parseConfig(option interface{}) (*Config, error) {
-	m,ok := option.(map[interface{}]interface{})
+	m, ok := option.(map[interface{}]interface{})
 	if !ok {
 		return nil, fmt.Errorf("expect option to be a map, go %v", option)
 	}
@@ -47,9 +47,9 @@ func (Preprocessor) parseConfig(option interface{}) (*Config, error) {
 	}
 	to, ok := m["to"].(string)
 	if !ok {
-		return nil,errors.New("expecting to option")
+		return nil, errors.New("expecting to option")
 	}
-	return &Config{from,to},nil
+	return &Config{from, to}, nil
 }
 
 func (Preprocessor) validConfig(config *Config) error {
@@ -65,4 +65,3 @@ func (Preprocessor) validConfig(config *Config) error {
 func init() {
 	prepros.GlobalRegistry.Registry("copy", &Preprocessor{})
 }
-

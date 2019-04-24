@@ -10,8 +10,8 @@ func NewBuilder() *Builder {
 	return &Builder{NewTranslation("")}
 }
 
-func (b Builder) Add(key string,text string) Translation {
-	segments := strings.Split(key , ".")
+func (b Builder) Add(key string, text string) Translation {
+	segments := strings.Split(key, ".")
 	var current Translation = b
 	for _, s := range segments {
 		node := current.GetChild(s)
@@ -24,4 +24,3 @@ func (b Builder) Add(key string,text string) Translation {
 	current.SetText(text)
 	return current
 }
-

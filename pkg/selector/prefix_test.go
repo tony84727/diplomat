@@ -13,4 +13,3 @@ func TestPrefixSelector(t *testing.T) {
 	assert.False(t, s.IsValid([]string{"message"}))
 	assert.False(t, s.IsValid([]string{"hello"}))
 }
-

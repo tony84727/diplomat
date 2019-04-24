@@ -6,7 +6,7 @@ var (
 
 type Registry interface {
 	Get(name string) Emitter
-	Registry(name string,instance Emitter)
+	Registry(name string, instance Emitter)
 }
 
 type emitterRegistryImpl struct {
@@ -24,4 +24,3 @@ func (e *emitterRegistryImpl) Get(name string) Emitter {
 func init() {
 	GlobalRegistry = &emitterRegistryImpl{instances: make(map[string]Emitter)}
 }
-

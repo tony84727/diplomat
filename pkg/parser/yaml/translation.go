@@ -2,24 +2,24 @@ package yaml
 
 import (
 	"fmt"
-	"github.com/insufficientchocolate/diplomat/pkg/data"
+	"github.com/tony84727/diplomat/pkg/data"
 	"gopkg.in/yaml.v2"
 )
 
 type TranslationParser struct {
 	content []byte
-	root data.Translation
+	root    data.Translation
 }
 
 type translationFile yaml.MapSlice
 
-func (p *TranslationParser) GetTranslation() (data.Translation,error) {
+func (p *TranslationParser) GetTranslation() (data.Translation, error) {
 	if p.root != nil {
-		return p.root,nil
+		return p.root, nil
 	}
 	err := p.parse()
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	return p.root, nil
 }
@@ -32,7 +32,7 @@ func (p *TranslationParser) parse() error {
 	}
 
 	root := data.NewTranslation("")
-	err = p.assignTranslations(root,translations)
+	err = p.assignTranslations(root, translations)
 	if err != nil {
 		return err
 	}
@@ -40,8 +40,8 @@ func (p *TranslationParser) parse() error {
 	return nil
 }
 
-func (p TranslationParser) assignTranslations(root data.Translation,input translationFile) error {
-	for _,item := range input {
+func (p TranslationParser) assignTranslations(root data.Translation, input translationFile) error {
+	for _, item := range input {
 		stringKey, ok := item.Key.(string)
 		if !ok {
 			return fmt.Errorf("unexpected %v", input)
@@ -53,7 +53,7 @@ func (p TranslationParser) assignTranslations(root data.Translation,input transl
 		case string:
 			current.SetText(v)
 		default:
-			return fmt.Errorf("unexpected %v(%T)", v,v)
+			return fmt.Errorf("unexpected %v(%T)", v, v)
 		}
 		root.AddChild(current)
 	}
@@ -63,5 +63,3 @@ func (p TranslationParser) assignTranslations(root data.Translation,input transl
 func NewParser(content []byte) *TranslationParser {
 	return &TranslationParser{content: content}
 }
-
-

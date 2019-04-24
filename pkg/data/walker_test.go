@@ -22,7 +22,7 @@ func (t translationWalkerTestSuite) TestGetKeys() {
 	root.AddChild(hello)
 	walker := NewTranslationWalker(root)
 	keys := walker.GetKeys()
-	t.ElementsMatch([]string{"hello.english","hello.chinese"},keys)
+	t.ElementsMatch([]string{"hello.english", "hello.chinese"}, keys)
 }
 
 func (t translationWalkerTestSuite) TestBacktracking() {

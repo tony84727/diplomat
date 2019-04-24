@@ -8,12 +8,12 @@ import (
 )
 
 var (
-	configFilePattern = regexp.MustCompile(`^diplomat\.ya?ml`)
+	configFilePattern      = regexp.MustCompile(`^diplomat\.ya?ml`)
 	translationFilePattern = regexp.MustCompile(`.*ya?ml`)
 )
 
 type SourceSet interface {
-	GetConfigurationFile() (string,error)
+	GetConfigurationFile() (string, error)
 	GetTranslationFiles() ([]string, error)
 }
 
@@ -74,7 +74,7 @@ func (f fileSystemSourceSet) GetTranslationFiles() ([]string, error) {
 	}); err != nil {
 		return nil, err
 	}
-	return files,nil
+	return files, nil
 }
 
 func NewFileSystemSourceSet(rootPath string) SourceSet {

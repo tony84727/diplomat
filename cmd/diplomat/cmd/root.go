@@ -8,7 +8,7 @@ import (
 
 var (
 	rootCmd = &cobra.Command{
-		Use: "diplomat",
+		Use:   "diplomat",
 		Short: "diplomat is tool to manage i18n translation materials",
 	}
 )

@@ -1,8 +1,8 @@
 package chinese
 
 import (
-	"github.com/insufficientchocolate/diplomat/pkg/data"
 	"github.com/stretchr/testify/suite"
+	"github.com/tony84727/diplomat/pkg/data"
 	"strings"
 	"testing"
 )
@@ -22,19 +22,19 @@ func (p PreprocessorTestSuite) TestProcess() {
 	p.NoError(instance.Process(root, map[interface{}]interface{}{
 		"mode": "t2s",
 		"from": "zh-TW",
-		"to": "zh-CN",
+		"to":   "zh-CN",
 	}))
 	keys := make([]string, 0)
 	walker := data.NewTranslationWalker(root)
 	p.NoError(walker.ForEachTextNode(func(paths []string, textNode data.Translation) error {
-		key :=  strings.Join(paths, ".")
-		keys = append(keys,key)
+		key := strings.Join(paths, ".")
+		keys = append(keys, key)
 		if key == "question.zh-CN" {
 			p.Equal("问题", *textNode.GetText())
 		}
 		return nil
 	}))
-	p.ElementsMatch([]string{"question.zh-TW","question.zh-CN"}, keys)
+	p.ElementsMatch([]string{"question.zh-TW", "question.zh-CN"}, keys)
 }
 
 func TestPreprocessor(t *testing.T) {

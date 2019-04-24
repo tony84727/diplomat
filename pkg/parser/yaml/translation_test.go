@@ -1,8 +1,8 @@
 package yaml
 
 import (
-	"github.com/insufficientchocolate/diplomat/pkg/data"
 	"github.com/stretchr/testify/suite"
+	"github.com/tony84727/diplomat/pkg/data"
 	"io/ioutil"
 	"testing"
 )

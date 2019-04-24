@@ -1,7 +1,7 @@
 package emit
 
-import "github.com/insufficientchocolate/diplomat/pkg/data"
+import "github.com/tony84727/diplomat/pkg/data"
 
 type Emitter interface {
-	Emit(translation data.Translation) ([]byte,error)
+	Emit(translation data.Translation) ([]byte, error)
 }
