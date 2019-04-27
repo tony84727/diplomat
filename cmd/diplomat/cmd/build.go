@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/tony84727/diplomat"
-	"github.com/tony84727/diplomat/internal"
 	"github.com/tony84727/diplomat/pkg/data"
 	"github.com/tony84727/diplomat/pkg/emit"
 	_ "github.com/tony84727/diplomat/pkg/emit/javascript"
@@ -55,17 +54,8 @@ var (
 				os.Exit(1)
 			}
 			preprocessorConfigs := config.GetPreprocessors()
-			preprocessorInstances := make([]internal.PreprocessorFunc, 0, len(preprocessorConfigs))
-			// reverse order
-			for i := len(preprocessorConfigs) - 1; i >= 0; i-- {
-				p := preprocessorConfigs[i]
-				if instance := prepros.GlobalRegistry.Get(p.GetType()); instance != nil {
-					preprocessorInstances = append(preprocessorInstances, func(translation data.Translation) error {
-						return instance.Process(translation, p.GetOptions())
-					})
-				}
-			}
-			preprocessorPipeline := internal.ComposePreprocessorFunc(preprocessorInstances...)
+			preprocessorFactory := prepros.NewFactory(prepros.GlobalRegistry, preprocessorConfigs...)
+
 			allTranslation := data.NewTranslationMerger(data.NewTranslation(""))
 			translationFiles, err := sourceSet.GetTranslationFiles()
 			if err != nil {
@@ -86,7 +76,7 @@ var (
 				}
 				allTranslation.Merge(translation)
 			}
-			if err := preprocessorPipeline(allTranslation); err != nil {
+			if err := preprocessorFactory.Build()(allTranslation); err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
