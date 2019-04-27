@@ -1,9 +1,8 @@
-package diplomat
+package selector
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestPrefixSelector(t *testing.T) {
@@ -13,14 +12,4 @@ func TestPrefixSelector(t *testing.T) {
 	assert.True(t, s.IsValid([]string{"admin", "hello", "world"}))
 	assert.False(t, s.IsValid([]string{"message"}))
 	assert.False(t, s.IsValid([]string{"hello"}))
-}
-
-func TestCombindSelector(t *testing.T) {
-	a := NewPrefixSelector("admin", "hello")
-	b := NewPrefixSelector("admin", "world")
-	c := NewCombinedSelector(a, b)
-	assert.True(t, c.IsValid([]string{"admin"}))
-	assert.True(t, c.IsValid([]string{"admin", "hello"}))
-	assert.True(t, c.IsValid([]string{"admin", "world"}))
-	assert.False(t, c.IsValid([]string{"message", "hello"}))
 }

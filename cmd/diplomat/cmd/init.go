@@ -25,8 +25,8 @@ output:
 
 var (
 	outline string
-	initCmd  = &cobra.Command{
-		Use: "init",
+	initCmd = &cobra.Command{
+		Use:   "init",
 		Short: "init diplomat project",
 		Run: func(cmd *cobra.Command, args []string) {
 			var projectDir string
@@ -64,5 +64,5 @@ var (
 )
 
 func init() {
-	initCmd.Flags().StringVarP(&outline,"outline","o","outline.yaml","path to configuration file of diplomat")
+	initCmd.Flags().StringVarP(&outline, "outline", "o", "outline.yaml", "path to configuration file of diplomat")
 }

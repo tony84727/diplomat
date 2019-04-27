@@ -2,9 +2,9 @@ version: "1"
 preprocessors:
 - type: chinese
   options:
-    mode: t2s
-    from: zh-TW
-    to: zh-CN
+    - mode: t2s
+      from: zh-TW
+      to: zh-CN
 - type: copy
   options:
     from: en
@@ -14,6 +14,6 @@ outputs:
       - admin
       - manage
     templates:
-      - type: js-object
+      - type: js
         options:
-          filename: "control-panel.js"
+          filename: "control-panel.{{.Lang}}.js"
