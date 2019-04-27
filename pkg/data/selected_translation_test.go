@@ -1,8 +1,8 @@
 package data
 
 import (
-	"github.com/tony84727/diplomat/pkg/selector"
 	"github.com/stretchr/testify/suite"
+	"github.com/tony84727/diplomat/pkg/selector"
 	"strings"
 	"testing"
 )

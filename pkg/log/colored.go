@@ -3,7 +3,7 @@ package log
 import "github.com/fatih/color"
 
 var (
-	infoColor = color.Cyan
+	infoColor  = color.Cyan
 	errorColor = color.Red
 	debugColor = color.Yellow
 )

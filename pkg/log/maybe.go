@@ -6,7 +6,7 @@ type maybeLogger struct {
 
 func (m maybeLogger) Info(message string, args ...interface{}) {
 	if m.parent != nil {
-		m.parent.Info(message,args...)
+		m.parent.Info(message, args...)
 	}
 }
 
@@ -25,4 +25,3 @@ func (m maybeLogger) Debug(message string, args ...interface{}) {
 func MaybeLogger(logger Logger) Logger {
 	return &maybeLogger{logger}
 }
-

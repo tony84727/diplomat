@@ -39,7 +39,7 @@ func (s Synthesizer) Output(output data.Output) error {
 			wg.Add(1)
 			go func(t data.Template) {
 				defer wg.Done()
-				s.logger.Info("[Emitting] %s [%s]", t.GetOptions().GetFilename(),t.GetType())
+				s.logger.Info("[Emitting] %s [%s]", t.GetOptions().GetFilename(), t.GetType())
 				output, err := i.Emit(selected)
 				if err != nil {
 					errChan <- err
