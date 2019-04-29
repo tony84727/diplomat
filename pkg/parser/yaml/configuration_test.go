@@ -42,7 +42,7 @@ func (c ConfigurationParserTestSuite) TestGetConfiguration() {
 	c.Require().Len(output.GetTemplates(), 1)
 	template := outputs[0].GetTemplates()[0]
 	c.Equal("js", template.GetType())
-	c.Equal(templateOption{data.SimpleTemplateOption("control-panel.{{.Lang}}.js")}, template.GetOptions())
+	c.Equal(templateOption{map[string]interface{}{"filename":"control-panel.{{.Lang}}.js"}}, template.GetOptions())
 }
 
 func TestConfigurationParser(t *testing.T) {

@@ -9,6 +9,7 @@ type Selector string
 
 type TemplateOption interface {
 	GetFilename() string
+	GetMapElement() map[string]interface{}
 }
 
 type Template interface {

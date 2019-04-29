@@ -39,10 +39,14 @@ func (s SimpleTemplate) GetOptions() TemplateOption {
 	return s.Options
 }
 
-type SimpleTemplateOption string
+type SimpleTemplateOption map[string]interface{}
+
+func (s SimpleTemplateOption) GetMapElement() map[string]interface{} {
+	return s
+}
 
 func (s SimpleTemplateOption) GetFilename() string {
-	return string(s)
+	return s.GetMapElement()["filename"].(string)
 }
 
 type SimplePreprocessor struct {

@@ -26,13 +26,11 @@ type templateOption struct {
 }
 
 func (t *templateOption) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var actual struct {
-		Filename string `yaml:"filename"`
-	}
-	if err := unmarshal(&actual); err != nil {
+	var options map[string]interface{}
+	if err := unmarshal(&options); err != nil {
 		return err
 	}
-	t.SimpleTemplateOption = data.SimpleTemplateOption(actual.Filename)
+	t.SimpleTemplateOption = options
 	return nil
 }
 
