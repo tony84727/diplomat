@@ -5,7 +5,7 @@ import (
 	"github.com/tony84727/diplomat/pkg/prepros/internal"
 )
 
-type Factory interface {
+type ComposeFactory interface {
 	Build() internal.PreprocessorFunc
 }
 
@@ -17,7 +17,7 @@ func (f factory) Build() internal.PreprocessorFunc {
 	return f.preprocessor
 }
 
-func NewFactory(registry Registry, configs ...data.Preprocessor) Factory {
+func NewComposeFactory(registry Registry, configs ...data.Preprocessor) ComposeFactory {
 	preprocessorInstances := make([]internal.PreprocessorFunc, 0, len(configs))
 	// reverse order
 	for i := len(configs) - 1; i >= 0; i-- {

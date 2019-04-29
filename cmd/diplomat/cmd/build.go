@@ -54,7 +54,7 @@ var (
 				os.Exit(1)
 			}
 			preprocessorConfigs := config.GetPreprocessors()
-			preprocessorFactory := prepros.NewFactory(prepros.GlobalRegistry, preprocessorConfigs...)
+			preprocessorFactory := prepros.NewComposeFactory(prepros.GlobalRegistry, preprocessorConfigs...)
 
 			allTranslation := data.NewTranslationMerger(data.NewTranslation(""))
 			translationFiles, err := sourceSet.GetTranslationFiles()

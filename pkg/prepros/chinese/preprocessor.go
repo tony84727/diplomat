@@ -6,6 +6,7 @@ import (
 	"github.com/siongui/gojianfan"
 	"github.com/tony84727/diplomat/pkg/data"
 	"github.com/tony84727/diplomat/pkg/prepros"
+	"github.com/tony84727/diplomat/pkg/prepros/types"
 )
 
 type TransformMode int
@@ -80,6 +81,10 @@ func (p Preprocessor) Process(translation data.Translation, option interface{}) 
 	})
 }
 
+func New() types.Preprocessor {
+	return &Preprocessor{}
+}
+
 func init() {
-	prepros.GlobalRegistry.Registry("chinese", &Preprocessor{})
+	prepros.GlobalRegistry.Registry("chinese", types.FactoryWrapper{Constructor: New})
 }

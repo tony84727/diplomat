@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/tony84727/diplomat/pkg/data"
 	"github.com/tony84727/diplomat/pkg/prepros"
+	"github.com/tony84727/diplomat/pkg/prepros/types"
 )
 
 type Preprocessor struct {
@@ -62,6 +63,10 @@ func (Preprocessor) validConfig(config *Config) error {
 	return nil
 }
 
+func New() types.Preprocessor {
+	return &Preprocessor{}
+}
+
 func init() {
-	prepros.GlobalRegistry.Registry("copy", &Preprocessor{})
+	prepros.GlobalRegistry.Registry("copy", types.FactoryWrapper{Constructor: New})
 }
