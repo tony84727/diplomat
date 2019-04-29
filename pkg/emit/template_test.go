@@ -30,7 +30,7 @@ func ExampleTemplateEmitter_Emit() {
 	if err != nil {
 		panic(err)
 	}
-	output, err := emitter.Emit(translation)
+	output, err := emitter.Emit(translation, nil)
 	if err != nil {
 		panic(err)
 	}

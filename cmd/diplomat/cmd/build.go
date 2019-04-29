@@ -6,6 +6,7 @@ import (
 	"github.com/tony84727/diplomat"
 	"github.com/tony84727/diplomat/pkg/data"
 	"github.com/tony84727/diplomat/pkg/emit"
+	_ "github.com/tony84727/diplomat/pkg/emit/golang"
 	_ "github.com/tony84727/diplomat/pkg/emit/javascript"
 	"github.com/tony84727/diplomat/pkg/log"
 	"github.com/tony84727/diplomat/pkg/parser/yaml"

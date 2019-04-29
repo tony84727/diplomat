@@ -22,7 +22,7 @@ func ExampleObjectEmitter_Emit() {
 		panic(err)
 	}
 	emitter := NewObjectEmitter()
-	output, err := emitter.Emit(translation)
+	output, err := emitter.Emit(translation, nil)
 	if err != nil {
 		panic(err)
 	}
