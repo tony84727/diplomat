@@ -32,3 +32,10 @@ func (c *ConfigurationParser) parse() error {
 func NewConfigurationParser(content []byte) *ConfigurationParser {
 	return &ConfigurationParser{content: content}
 }
+
+func Write(configuration data.Configuration) ([]byte, error) {
+	if sc, ok := configuration.(data.SimpleConfiguration); ok {
+		return yaml.Marshal(sc)
+	}
+	return yaml.Marshal(configuration)
+}

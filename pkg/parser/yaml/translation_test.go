@@ -12,7 +12,7 @@ type TranslationParserTestSuite struct {
 }
 
 func (p TranslationParserTestSuite) TestParse() {
-	content, err := ioutil.ReadFile("testdata/admin.yaml")
+	content, err := ioutil.ReadFile("../../../testdata/admin.yaml")
 	p.Require().NoError(err)
 	parser := NewParser(content)
 	translation, err := parser.GetTranslation()

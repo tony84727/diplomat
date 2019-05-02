@@ -5,7 +5,7 @@ import (
 )
 
 type preprocessor struct {
-	data.SimplePreprocessor
+	data.SimplePreprocessor `yaml:",inline"`
 }
 
 func (p *preprocessor) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -22,7 +22,7 @@ func (p *preprocessor) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type templateOption struct {
-	data.SimpleTemplateOption
+	data.SimpleTemplateOption `yaml:",inline"`
 }
 
 func (t *templateOption) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -35,7 +35,7 @@ func (t *templateOption) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 type template struct {
-	data.SimpleTemplate
+	data.SimpleTemplate `yaml:",inline"`
 }
 
 func (t *template) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -52,7 +52,7 @@ func (t *template) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type output struct {
-	data.SimpleOutput
+	data.SimpleOutput `yaml:",inline"`
 }
 
 func (o *output) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -76,7 +76,7 @@ func (o *output) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type configurationFile struct {
-	data.SimpleConfiguration
+	data.SimpleConfiguration `yaml:",inline"`
 }
 
 func (c *configurationFile) UnmarshalYAML(unmarshal func(interface{}) error) error {

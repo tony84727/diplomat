@@ -34,6 +34,7 @@ func New{{ $dataName }}() {{ .Name }} {
 {{ end }}
 `
 )
+
 type MapEmitterOption struct {
 	data.TemplateOption
 }
@@ -92,5 +93,5 @@ func (m MapEmitter) Emit(translations data.Translation, options data.TemplateOpt
 }
 
 func init() {
-	emit.GlobalRegistry.Registry("go",types.FactoryWrapper{Constructor:NewMapEmitter})
+	emit.GlobalRegistry.Registry("go", types.FactoryWrapper{Constructor: NewMapEmitter})
 }

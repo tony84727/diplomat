@@ -1,8 +1,0 @@
-admin:
-  admin:
-    zh-TW: '管理員'
-    en: 'Admin'
-  message:
-    hello:
-      zh-TW: '您好'
-      en: 'Hello!'
