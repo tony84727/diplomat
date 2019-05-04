@@ -15,6 +15,8 @@ var (
 type SourceSet interface {
 	GetConfigurationFile() (string, error)
 	GetTranslationFiles() ([]string, error)
+	// Of resolves relative path by prefixing root of the SourceSet
+	Of(relativePath string) string
 }
 
 type fileSystemSourceSet struct {
@@ -75,6 +77,10 @@ func (f fileSystemSourceSet) GetTranslationFiles() ([]string, error) {
 		return nil, err
 	}
 	return files, nil
+}
+
+func (f fileSystemSourceSet) Of(relativePath string) string {
+	return filepath.Join(f.rootPath, relativePath)
 }
 
 func NewFileSystemSourceSet(rootPath string) SourceSet {

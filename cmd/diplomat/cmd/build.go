@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/tony84727/diplomat"
+	"github.com/tony84727/diplomat/cmd/diplomat/internal"
 	"github.com/tony84727/diplomat/pkg/data"
 	"github.com/tony84727/diplomat/pkg/emit"
 	_ "github.com/tony84727/diplomat/pkg/emit/golang"
@@ -15,8 +16,14 @@ import (
 	_ "github.com/tony84727/diplomat/pkg/prepros/copy"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 )
+
+func findProject(args []string) (*internal.Project, error) {
+	if len(args) > 0 {
+		return internal.NewProject(args[0]), nil
+	}
+	return internal.FindProject(nil)
+}
 
 var (
 	watch    bool
@@ -25,31 +32,13 @@ var (
 		Short: "build",
 		Run: func(cmd *cobra.Command, args []string) {
 			logger := log.NewColoredLogger()
-			var projectDir string
-			if len(args) > 0 {
-				projectDir = args[0]
-			} else {
-				var err error
-				projectDir, err = os.Getwd()
-				if err != nil {
-					fmt.Println("cannot get current working directory", err)
-					os.Exit(1)
-				}
-			}
-			outDir := filepath.Join(projectDir, "out")
-			sourceSet := data.NewFileSystemSourceSet(projectDir)
-			configFile, err := sourceSet.GetConfigurationFile()
+			project, err := findProject(args)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			configData, err := ioutil.ReadFile(configFile)
-			if err != nil {
-				logger.Error(err.Error())
-				os.Exit(1)
-			}
-			configParser := yaml.NewConfigurationParser(configData)
-			config, err := configParser.GetConfiguration()
+			outDir := project.Of("out")
+			config, err := project.LoadConfig()
 			if err != nil {
 				logger.Error(err.Error())
 				os.Exit(1)
@@ -58,7 +47,7 @@ var (
 			preprocessorFactory := prepros.NewComposeFactory(prepros.GlobalRegistry, preprocessorConfigs...)
 
 			allTranslation := data.NewTranslationMerger(data.NewTranslation(""))
-			translationFiles, err := sourceSet.GetTranslationFiles()
+			translationFiles, err := project.GetTranslationFiles()
 			if err != nil {
 				logger.Error(err.Error())
 				os.Exit(1)
