@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@bazel_gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/tony84727/diplomat
+gazelle(name = "gazelle")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["compiler.go"],
+    importpath = "github.com/tony84727/diplomat",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/data:go_default_library",
+        "//pkg/emit:go_default_library",
+        "//pkg/log:go_default_library",
+        "//pkg/selector:go_default_library",
+    ],
+)
