@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "colored.go",
+        "interface.go",
+        "maybe.go",
+    ],
+    importpath = "github.com/tony84727/diplomat/pkg/log",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_fatih_color//:go_default_library"],
+)

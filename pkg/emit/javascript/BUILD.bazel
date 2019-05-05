@@ -1,0 +1,20 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["object.go"],
+    importpath = "github.com/tony84727/diplomat/pkg/emit/javascript",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/data:go_default_library",
+        "//pkg/emit:go_default_library",
+        "//pkg/emit/types:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["object_test.go"],
+    embed = [":go_default_library"],
+    deps = ["//pkg/parser/yaml:go_default_library"],
+)

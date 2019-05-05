@@ -1,0 +1,30 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "config_types.go",
+        "configuration.go",
+        "translation.go",
+    ],
+    importpath = "github.com/tony84727/diplomat/pkg/parser/yaml",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/data:go_default_library",
+        "@in_gopkg_yaml_v2//:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "configuration_test.go",
+        "translation_test.go",
+    ],
+    data = glob(["testdata/**"]),
+    embed = [":go_default_library"],
+    deps = [
+        "//pkg/data:go_default_library",
+        "@com_github_stretchr_testify//suite:go_default_library",
+    ],
+)

@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "build.go",
+        "init.go",
+        "root.go",
+    ],
+    importpath = "github.com/tony84727/diplomat/cmd/diplomat/cmd",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:go_default_library",
+        "//pkg/data:go_default_library",
+        "//pkg/emit:go_default_library",
+        "//pkg/emit/golang:go_default_library",
+        "//pkg/emit/javascript:go_default_library",
+        "//pkg/log:go_default_library",
+        "//pkg/parser/yaml:go_default_library",
+        "//pkg/prepros:go_default_library",
+        "//pkg/prepros/chinese:go_default_library",
+        "//pkg/prepros/copy:go_default_library",
+        "@com_github_spf13_cobra//:go_default_library",
+    ],
+)

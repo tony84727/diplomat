@@ -1,0 +1,33 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "builder.go",
+        "config_container.go",
+        "configuration.go",
+        "merger.go",
+        "selected_translation.go",
+        "source_set.go",
+        "translation.go",
+        "walker.go",
+    ],
+    importpath = "github.com/tony84727/diplomat/pkg/data",
+    visibility = ["//visibility:public"],
+    deps = ["//pkg/selector:go_default_library"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "builder_test.go",
+        "merger_test.go",
+        "selected_translation_test.go",
+        "walker_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//pkg/selector:go_default_library",
+        "@com_github_stretchr_testify//suite:go_default_library",
+    ],
+)

@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["preprocessor.go"],
+    importpath = "github.com/tony84727/diplomat/pkg/prepros/copy",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/data:go_default_library",
+        "//pkg/prepros:go_default_library",
+        "//pkg/prepros/types:go_default_library",
+    ],
+)
