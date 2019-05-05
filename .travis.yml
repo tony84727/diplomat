@@ -1,6 +1,19 @@
-language: go
-go:
-  - "1.9.x"
-  - "1.10.x"
-  - master
-
+dist: xenial
+language: java
+matrix:
+  include:
+    - os: linux
+      dist: xenial
+      env: DOWNLOAD_URL=https://github.com/bazelbuild/bazel/releases/download/0.25.0/bazel-0.25.0-linux-x86_64 DOWNLOAD_NAME=bazel BAZEL_COMMAND="./bazel"
+    - os: osx
+      env: DOWNLOAD_URL=https://github.com/bazelbuild/bazel/releases/download/0.25.0/bazel-0.25.0-installer-darwin-x86_64.sh DOWNLOAD_NAME=bazel-installer BAZEL_COMMAND="bazel"
+cache:
+  directories:
+    - $HOME/.cache/bazel
+before_install:
+  - wget "${DOWNLOAD_URL}" -O "${DOWNLOAD_NAME}"
+  - chmod +x "${DOWNLOAD_NAME}"
+  # run bazel osx installer
+  - if [[ "`uname`" == "Darwin" ]]; then `pwd`/"${DOWNLOAD_NAME}"; fi
+script:
+  - ${BAZEL_COMMAND} test --verbose_failures --noshow_progress --test_output=errors //...
