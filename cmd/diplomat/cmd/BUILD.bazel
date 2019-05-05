@@ -11,6 +11,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:go_default_library",
+        "//cmd/diplomat/internal:go_default_library",
         "//pkg/data:go_default_library",
         "//pkg/emit:go_default_library",
         "//pkg/emit/golang:go_default_library",

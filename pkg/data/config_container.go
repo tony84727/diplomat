@@ -1,8 +1,8 @@
 package data
 
 type SimpleConfiguration struct {
-	Preprocessors []Preprocessor
-	Outputs       []Output
+	Preprocessors []Preprocessor `navigate:"preprocessors"`
+	Outputs       []Output `navigate:"outputs"`
 }
 
 func (s SimpleConfiguration) GetPreprocessors() []Preprocessor {
@@ -14,8 +14,8 @@ func (s SimpleConfiguration) GetOutputs() []Output {
 }
 
 type SimpleOutput struct {
-	Selectors []Selector
-	Templates []Template
+	Selectors []Selector `navigate:"selectors"`
+	Templates []Template `navigate:"templates"`
 }
 
 func (s SimpleOutput) GetSelectors() []Selector {
@@ -27,8 +27,8 @@ func (s SimpleOutput) GetTemplates() []Template {
 }
 
 type SimpleTemplate struct {
-	Type    string
-	Options TemplateOption
+	Type    string `navigate:"type"`
+	Options TemplateOption `navigate:"options"`
 }
 
 func (s SimpleTemplate) GetType() string {
@@ -50,8 +50,8 @@ func (s SimpleTemplateOption) GetFilename() string {
 }
 
 type SimplePreprocessor struct {
-	Type    string
-	Options interface{}
+	Type    string `navigate:"type"`
+	Options interface{} `navigate:"options"`
 }
 
 func (s SimplePreprocessor) GetType() string {
