@@ -9,11 +9,12 @@ import (
 )
 
 type ConfigNavigator struct {
-	config data.Configuration
+	current reflect.Value
+	currentType reflect.Type
 }
 
 func NewConfigNavigator(config data.Configuration) *ConfigNavigator {
-	return &ConfigNavigator{config: config}
+	return &ConfigNavigator{current: reflect.ValueOf(config), currentType: reflect.TypeOf(config)}
 }
 
 func structFieldHint(structValue reflect.Value) string {
@@ -25,66 +26,42 @@ func structFieldHint(structValue reflect.Value) string {
 	return fmt.Sprintf("%v", keys)
 }
 
-// searchField given the field name, search the name by "navigate" tag.
-func searchField(fieldName string, theType reflect.Type) (index []int, ok bool) {
-	for i := 0 ; i < theType.NumField(); i++ {
-		f := theType.FieldByIndex([]int{i})
-		value, exist := f.Tag.Lookup("navigate")
-		if !exist {
-			continue
-		}
-		if fieldName == value {
-			return []int{i}, true
-		}
-	}
-	// search one level down for embedded struct
-	for i := 0; i < theType.NumField(); i++ {
-		top := theType.FieldByIndex([]int{i})
-		for j := 0; j < top.Type.NumField(); j++ {
-			f := top.Type.FieldByIndex([]int{j})
-			value, exist := f.Tag.Lookup("navigate")
-			if !exist {
-				continue
-			}
-			if fieldName == value {
-				return []int{i,j}, true
-			}
-		}
-	}
-	return nil, false
+func (c *ConfigNavigator) setCurrent(value reflect.Value) {
+	c.current = value
+	c.currentType = value.Type()
 }
 
-func (c ConfigNavigator) Get(paths ...string) (interface{}, error) {
-	currentValue := reflect.ValueOf(c.config)
+func (c *ConfigNavigator) Get(paths ...string) (interface{}, error) {
 	i := 0
 	for i < len(paths) {
-		currentType := currentValue.Type()
-		switch currentType.Kind() {
+		switch c.currentType.Kind() {
 		case reflect.Ptr, reflect.Interface:
-			currentValue = currentValue.Elem()
+			c.setCurrent(c.current.Elem())
+			continue
 		case reflect.Slice:
 			index,err := strconv.Atoi(paths[i])
 			if err != nil {
 				return nil,fmt.Errorf(`%s is a slice. "%s" is not a valid integer`, strings.Join(paths[:i],"."), paths[i])
 			}
-			currentValue = currentValue.Index(index)
+			c.setCurrent(c.current.Index(index))
 			i++
 		case reflect.Struct:
-			index, ok := searchField(paths[i], currentType)
+			searcher := FieldSearcher{c.currentType}
+			index, ok := searcher.Search(paths[i])
 			if !ok {
-				return nil, fmt.Errorf("%s doesn't exist, possible values %s", paths[i], structFieldHint(currentValue))
+				return nil, fmt.Errorf("%s doesn't exist, possible values %s", paths[i], structFieldHint(c.current))
 			}
-			currentValue = currentValue.FieldByIndex(index)
+			c.setCurrent(c.current.FieldByIndex(index))
 			i++
 		case reflect.Map:
-			currentValue = currentValue.MapIndex(reflect.ValueOf(paths[i]))
+			c.setCurrent(c.current.MapIndex(reflect.ValueOf(paths[i])))
 			i++
 		default:
 			if i < len(paths)  {
-				return nil, fmt.Errorf("%s doesn't exist. current: %T", paths[i], currentValue.Interface())
+				return nil, fmt.Errorf("%s doesn't exist. current: %T", paths[i], c.current.Interface())
 			}
 		}
 	}
 
-	return currentValue.Interface(),nil
+	return c.current.Interface(),nil
 }

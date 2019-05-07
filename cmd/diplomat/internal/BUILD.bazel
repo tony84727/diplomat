@@ -4,6 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "config_navigator.go",
+        "field_searcher.go",
         "project.go",
     ],
     importpath = "github.com/tony84727/diplomat/cmd/diplomat/internal",
@@ -16,12 +17,14 @@ go_library(
 
 go_test(
     name = "go_default_test",
-    srcs = ["config_navigator_test.go"],
+    srcs = [
+        "config_navigator_test.go",
+        "field_searcher_test.go",
+    ],
+    data = ["//testdata"],
     embed = [":go_default_library"],
     deps = [
         "//pkg/parser/yaml:go_default_library",
-        "@com_github_stretchr_testify//assert:go_default_library",
-        "@com_github_stretchr_testify//require:go_default_library",
         "@com_github_stretchr_testify//suite:go_default_library",
     ],
 )
