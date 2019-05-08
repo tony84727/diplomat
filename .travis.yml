@@ -7,9 +7,11 @@ matrix:
       env: DOWNLOAD_URL=https://github.com/bazelbuild/bazel/releases/download/0.25.0/bazel-0.25.0-linux-x86_64 DOWNLOAD_NAME=bazel BAZEL_COMMAND="./bazel"
     - os: osx
       env: DOWNLOAD_URL=https://github.com/bazelbuild/bazel/releases/download/0.25.0/bazel-0.25.0-installer-darwin-x86_64.sh DOWNLOAD_NAME=bazel-installer BAZEL_COMMAND="bazel"
-cache:
-  directories:
-    - $HOME/.cache/bazel
+# FIXME: When there's cache for linux job. Bazel will throw permission denied exception
+#cache:
+#  directories:
+#    - $HOME/.cache/bazel
+
 before_install:
   - wget "${DOWNLOAD_URL}" -O "${DOWNLOAD_NAME}"
   - chmod +x "${DOWNLOAD_NAME}"
