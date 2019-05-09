@@ -6,7 +6,10 @@ gazelle(name = "gazelle")
 
 go_library(
     name = "go_default_library",
-    srcs = ["compiler.go"],
+    srcs = [
+        "output.go",
+        "synthesizer.go",
+    ],
     importpath = "github.com/tony84727/diplomat",
     visibility = ["//visibility:public"],
     deps = [
