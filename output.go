@@ -1,6 +1,7 @@
 package diplomat
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -41,4 +42,14 @@ func (o OutputDirectory) ensureDirExistsForPath(filePath string) error {
 
 func (o OutputDirectory) absPath(relative string) string {
 	return filepath.Join(o.directory, relative)
+}
+
+type ConsoleOutput struct {
+}
+
+const fileDelimiter = "\n-----\n"
+
+func (c ConsoleOutput) WriteFile(filename string, data []byte) error {
+	fmt.Printf("%s%s%s%s", fileDelimiter, filename, fileDelimiter, string(data))
+	return nil
 }

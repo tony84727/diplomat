@@ -27,6 +27,7 @@ func findProject(args []string) (*internal.Project, error) {
 
 var (
 	watch    bool
+	printToStdOut bool
 	buildCmd = &cobra.Command{
 		Use:   "build",
 		Short: "build",
@@ -70,7 +71,13 @@ var (
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			synthesizer := diplomat.NewSynthesizer(outDir, allTranslation, emit.GlobalRegistry, logger)
+			var output diplomat.Output
+			if printToStdOut {
+				output = diplomat.ConsoleOutput{}
+			} else {
+				output = diplomat.NewOutputDirectory(outDir)
+			}
+			synthesizer := diplomat.NewSynthesizer(output, allTranslation, emit.GlobalRegistry, logger)
 			for _, o := range config.GetOutputs() {
 				err := synthesizer.Output(o)
 				if err != nil {
@@ -84,4 +91,5 @@ var (
 
 func init() {
 	buildCmd.Flags().BoolVar(&watch, "watch", false, "watch changes")
+	buildCmd.Flags().BoolVarP(&printToStdOut, "print", "p", false,"print outputs to stdout")
 }
