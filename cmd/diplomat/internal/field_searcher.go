@@ -1,12 +1,17 @@
 package internal
 
-import "reflect"
+import (
+	"github.com/tony84727/diplomat/pkg/reflecthelper"
+	"reflect"
+)
 
 // FieldSearcher is used for search field of a reflect type
 // with "navigate" tag
 type FieldSearcher struct {
 	value reflect.Value
 }
+
+
 
 func (f FieldSearcher) Search(name string) (fieldIndex []int, ok bool) {
 	for i := 0 ; i < f.value.NumField(); i++ {
@@ -21,15 +26,7 @@ func (f FieldSearcher) Search(name string) (fieldIndex []int, ok bool) {
 	}
 	// search one level down for embedded struct
 	for i := 0; i < f.value.NumField(); i++ {
-		fieldValue := f.value.Field(i)
-		for {
-			switch fieldValue.Type().Kind() {
-			case reflect.Interface, reflect.Ptr:
-				fieldValue = fieldValue.Elem()
-				continue
-			}
-			break
-		}
+		fieldValue := reflecthelper.Actual(f.value.Field(i))
 		top := fieldValue.Type()
 		for j := 0; j < top.NumField(); j++ {
 			f := top.FieldByIndex([]int{j})
