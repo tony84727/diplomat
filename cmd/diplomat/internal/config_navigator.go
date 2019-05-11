@@ -56,7 +56,7 @@ func (c *ConfigNavigator) Get(paths ...string) (interface{}, error) {
 			c.setCurrent(c.current.Index(index))
 			i++
 		case reflect.Struct:
-			searcher := FieldSearcher{c.currentType}
+			searcher := FieldSearcher{c.current}
 			index, ok := searcher.Search(segment)
 			if !ok {
 				return nil, fmt.Errorf("%s doesn't exist, possible values %s", segment, structFieldHint(c.current))

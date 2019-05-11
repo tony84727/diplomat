@@ -5,12 +5,12 @@ import "reflect"
 // FieldSearcher is used for search field of a reflect type
 // with "navigate" tag
 type FieldSearcher struct {
-	theType reflect.Type
+	value reflect.Value
 }
 
 func (f FieldSearcher) Search(name string) (fieldIndex []int, ok bool) {
-	for i := 0 ; i < f.theType.NumField(); i++ {
-		f := f.theType.FieldByIndex([]int{i})
+	for i := 0 ; i < f.value.NumField(); i++ {
+		f := f.value.Type().FieldByIndex([]int{i})
 		value, exist := f.Tag.Lookup("navigate")
 		if !exist {
 			continue
@@ -20,10 +20,19 @@ func (f FieldSearcher) Search(name string) (fieldIndex []int, ok bool) {
 		}
 	}
 	// search one level down for embedded struct
-	for i := 0; i < f.theType.NumField(); i++ {
-		top := f.theType.FieldByIndex([]int{i})
-		for j := 0; j < top.Type.NumField(); j++ {
-			f := top.Type.FieldByIndex([]int{j})
+	for i := 0; i < f.value.NumField(); i++ {
+		fieldValue := f.value.Field(i)
+		for {
+			switch fieldValue.Type().Kind() {
+			case reflect.Interface, reflect.Ptr:
+				fieldValue = fieldValue.Elem()
+				continue
+			}
+			break
+		}
+		top := fieldValue.Type()
+		for j := 0; j < top.NumField(); j++ {
+			f := top.FieldByIndex([]int{j})
 			value, exist := f.Tag.Lookup("navigate")
 			if !exist {
 				continue
