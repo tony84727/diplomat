@@ -4,6 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "config_navigator.go",
+        "configuration_updater.go",
         "field_searcher.go",
         "project.go",
     ],
@@ -19,11 +20,13 @@ go_test(
     name = "go_default_test",
     srcs = [
         "config_navigator_test.go",
+        "configuration_updater_test.go",
         "field_searcher_test.go",
     ],
     data = ["//testdata"],
     embed = [":go_default_library"],
     deps = [
+        "//pkg/data:go_default_library",
         "//pkg/parser/yaml:go_default_library",
         "@com_github_stretchr_testify//suite:go_default_library",
     ],
