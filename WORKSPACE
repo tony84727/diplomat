@@ -105,3 +105,9 @@ go_repository(
     commit = "e8e3143a4f4a",
     importpath = "golang.org/x/sys",
 )
+
+go_repository(
+    name = "com_github_google_uuid",
+    importpath = "github.com/google/uuid",
+    tag = "v1.1.1",
+)

@@ -8,7 +8,7 @@ import (
 
 const (
 	DefaultDirectoryPerm = 0755
-	DefaultFilePerm = 644
+	DefaultFilePerm = 0644
 )
 
 type Output interface {

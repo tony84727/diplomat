@@ -5,22 +5,19 @@ import (
 	"github.com/tony84727/diplomat/pkg/emit"
 	"github.com/tony84727/diplomat/pkg/log"
 	"github.com/tony84727/diplomat/pkg/selector"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 )
 
 type Synthesizer struct {
 	data.Translation
-	outputDir       string
+	output Output
 	emitterRegistry emit.Registry
 	logger          log.Logger
 }
 
-func NewSynthesizer(outputDir string, translation data.Translation, emitterRegistry emit.Registry, logger log.Logger) *Synthesizer {
-	return &Synthesizer{translation, outputDir, emitterRegistry, log.MaybeLogger(logger)}
+func NewSynthesizer(output Output, translation data.Translation, emitterRegistry emit.Registry, logger log.Logger) *Synthesizer {
+	return &Synthesizer{translation, output, emitterRegistry, log.MaybeLogger(logger)}
 }
 
 func (s Synthesizer) Output(output data.Output) error {
@@ -33,7 +30,6 @@ func (s Synthesizer) Output(output data.Output) error {
 	templates := output.GetTemplates()
 	errChan := make(chan error)
 	var wg sync.WaitGroup
-	_ = os.MkdirAll(s.outputDir, 0755)
 	for _, t := range templates {
 		if i := s.emitterRegistry.Get(t.GetType()); i != nil {
 			wg.Add(1)
@@ -45,7 +41,7 @@ func (s Synthesizer) Output(output data.Output) error {
 					errChan <- err
 					return
 				}
-				if err := ioutil.WriteFile(filepath.Join(s.outputDir, t.GetOptions().GetFilename()), output, 0644); err != nil {
+				if err := s.output.WriteFile(t.GetOptions().GetFilename(), output); err != nil {
 					errChan <- err
 				}
 			}(t)
