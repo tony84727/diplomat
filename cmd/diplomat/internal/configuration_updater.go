@@ -8,11 +8,11 @@ import (
 )
 
 type ConfigurationUpdater struct {
-	data.Configuration
+	Config data.Configuration
 }
 
 func (m *ConfigurationUpdater) Set(key string, value string) error {
-	navigator := NewConfigNavigator(m)
+	navigator := NewConfigNavigator(m.Config)
 	paths := strings.Split(key,".")
 	out,err := navigator.Get(paths[:len(paths)-1]...)
 	if err != nil {
