@@ -1,37 +1,43 @@
 package internal
 
-import "reflect"
+import (
+	"github.com/tony84727/diplomat/pkg/reflecthelper"
+	"reflect"
+)
 
 // FieldSearcher is used for search field of a reflect type
 // with "navigate" tag
 type FieldSearcher struct {
-	theType reflect.Type
+	value reflect.Value
 }
 
-func (f FieldSearcher) Search(name string) (fieldIndex []int, ok bool) {
-	for i := 0 ; i < f.theType.NumField(); i++ {
-		f := f.theType.FieldByIndex([]int{i})
-		value, exist := f.Tag.Lookup("navigate")
+
+
+func (f FieldSearcher) Search(name string) (value reflect.Value, ok bool) {
+	for i := 0 ; i < f.value.NumField(); i++ {
+		field := f.value.Type().FieldByIndex([]int{i})
+		navigateTag, exist := field.Tag.Lookup("navigate")
 		if !exist {
 			continue
 		}
-		if name == value {
-			return []int{i}, true
+		if name == navigateTag {
+			return f.value.Field(i), true
 		}
 	}
 	// search one level down for embedded struct
-	for i := 0; i < f.theType.NumField(); i++ {
-		top := f.theType.FieldByIndex([]int{i})
-		for j := 0; j < top.Type.NumField(); j++ {
-			f := top.Type.FieldByIndex([]int{j})
-			value, exist := f.Tag.Lookup("navigate")
+	for i := 0; i < f.value.NumField(); i++ {
+		fieldValue := reflecthelper.Actual(f.value.Field(i))
+		fieldType := fieldValue.Type()
+		for j := 0; j < fieldType.NumField(); j++ {
+			field := fieldType.Field(j)
+			value, exist := field.Tag.Lookup("navigate")
 			if !exist {
 				continue
 			}
 			if name == value {
-				return []int{i,j}, true
+				return fieldValue.Field(j), true
 			}
 		}
 	}
-	return nil, false
+	return reflect.Value{}, false
 }
