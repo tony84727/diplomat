@@ -13,31 +13,31 @@ type FieldSearcher struct {
 
 
 
-func (f FieldSearcher) Search(name string) (fieldIndex []int, ok bool) {
+func (f FieldSearcher) Search(name string) (value reflect.Value, ok bool) {
 	for i := 0 ; i < f.value.NumField(); i++ {
-		f := f.value.Type().FieldByIndex([]int{i})
-		value, exist := f.Tag.Lookup("navigate")
+		field := f.value.Type().FieldByIndex([]int{i})
+		navigateTag, exist := field.Tag.Lookup("navigate")
 		if !exist {
 			continue
 		}
-		if name == value {
-			return []int{i}, true
+		if name == navigateTag {
+			return f.value.Field(i), true
 		}
 	}
 	// search one level down for embedded struct
 	for i := 0; i < f.value.NumField(); i++ {
 		fieldValue := reflecthelper.Actual(f.value.Field(i))
-		top := fieldValue.Type()
-		for j := 0; j < top.NumField(); j++ {
-			f := top.FieldByIndex([]int{j})
-			value, exist := f.Tag.Lookup("navigate")
+		fieldType := fieldValue.Type()
+		for j := 0; j < fieldType.NumField(); j++ {
+			field := fieldType.Field(j)
+			value, exist := field.Tag.Lookup("navigate")
 			if !exist {
 				continue
 			}
 			if name == value {
-				return []int{i,j}, true
+				return fieldValue.Field(j), true
 			}
 		}
 	}
-	return nil, false
+	return reflect.Value{}, false
 }

@@ -57,11 +57,11 @@ func (c *ConfigNavigator) Get(paths ...string) (interface{}, error) {
 			i++
 		case reflect.Struct:
 			searcher := FieldSearcher{c.current}
-			index, ok := searcher.Search(segment)
+			value, ok := searcher.Search(segment)
 			if !ok {
 				return nil, fmt.Errorf("%s doesn't exist, possible values %s", segment, structFieldHint(c.current))
 			}
-			c.setCurrent(c.current.FieldByIndex(index))
+			c.setCurrent(value)
 			i++
 		case reflect.Map:
 			c.setCurrent(c.current.MapIndex(reflect.ValueOf(segment)))
