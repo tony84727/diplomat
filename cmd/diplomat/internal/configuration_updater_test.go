@@ -20,10 +20,11 @@ func (c ConfigurationUpdaterTestSuite) TestSet() {
 				},
 			},
 		},
+		Outputs: make([]data.Output, 0),
 	}
 	updater := NewConfigurationUpdater(config)
 	c.Require().NoError(updater.Set("preprocessors.0.options.from", "en"))
-	c.Equal("en",config.Preprocessors[0].GetOptions().(map[string]string)["mode"])
+	c.Equal("en",config.Preprocessors[0].GetOptions().(map[string]string)["from"])
 }
 
 func TestConfigurationUpdater(t *testing.T) {
