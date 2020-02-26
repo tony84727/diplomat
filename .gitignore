@@ -16,3 +16,6 @@
 
 # bazel
 /bazel-*
+
+# rust build
+/target
